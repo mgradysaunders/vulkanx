@@ -43,6 +43,204 @@ extern "C" {
  */
 /**@{*/
 
+/**
+ * @brief Swapchain.
+ */
+typedef struct VkxSwapchain_
+{
+    /**
+     * @name Swapchain configuration (immutable)
+     */
+    /**@{*/
+
+    /**
+     * @brief Present mode.
+     */
+    VkPresentModeKHR presentMode;
+
+    /**
+     * @brief Surface format.
+     */
+    VkSurfaceFormatKHR surfaceFormat;
+
+    /**
+     * @brief Pre-transform.
+     */
+    VkSurfaceTransformFlagBitsKHR preTransform;
+
+    /**
+     * @brief Composite alpha.
+     */
+    VkCompositeAlphaFlagBitsKHR compositeAlpha;
+
+    /**
+     * @brief Image usage flags.
+     */
+    VkImageUsageFlags imageUsage;
+
+    /**
+     * @brief Queue family index count.
+     */
+    uint32_t queueFamilyIndexCount;
+
+    /**
+     * @brief Queue family indices.
+     */
+    uint32_t queueFamilyIndices[2];
+
+    /**
+     * @brief Image sharing mode.
+     */
+    VkSharingMode imageSharingMode;
+
+    /**@}*/
+
+    /**
+     * @name Swapchain
+     */
+    /**@{*/
+
+    /**
+     * @brief Swapchain.
+     */
+    VkSwapchainKHR swapchain;
+
+    /**
+     * @brief Image extent.
+     */
+    VkExtent2D imageExtent;
+
+    /**
+     * @brief Image count.
+     */
+    uint32_t imageCount;
+
+    /**
+     * @brief Images.
+     */
+    VkImage* pImages;
+
+    /**
+     * @brief Image views.
+     */
+    VkImageView* pImageViews;
+
+    /**@}*/
+}
+VkxSwapchain;
+
+/**
+ * @brief Create swapchain.
+ *
+ * @param[in] physicalDevice
+ * Physical device.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] graphicsQueueFamilyIndex
+ * Graphics queue family index.
+ *
+ * @param[in] presentQueueFamilyIndex
+ * Present queue family index.
+ *
+ * @param[in] surface
+ * Surface.
+ *
+ * @param[in] surfaceExtent
+ * Surface extent.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pSwapchain
+ * Swapchain.
+ *
+ * @pre
+ * - `physicalDevice` is valid
+ * - `device` is valid
+ * - `graphicsQueueFamilyIndex` is valid and supports graphics commands
+ * - `presentQueueFamilyIndex` is valid and supports present commands
+ * - `surface` is valid
+ * - `pSwapchain` is non-`NULL`
+ * - `pSwapchain` is uninitialized
+ */
+VkResult vkxCreateSwapchain(
+            VkPhysicalDevice physicalDevice,
+            VkDevice device,
+            uint32_t graphicsQueueFamilyIndex,
+            uint32_t presentQueueFamilyIndex,
+            VkSurfaceKHR surface,
+            VkExtent2D surfaceExtent,
+            const VkAllocationCallbacks* pAllocator,
+            VkxSwapchain* pSwapchain)
+                __attribute__((nonnull(8)));
+
+/**
+ * @brief Recreate swapchain.
+ *
+ * @param[in] physicalDevice
+ * Physical device.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] surface
+ * Surface.
+ *
+ * @param[in] surfaceExtent
+ * Surface extent.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[inout] pSwapchain
+ * Swapchain.
+ *
+ * @pre
+ * - `physicalDevice` is valid
+ * - `device` is valid
+ * - `surface` is valid
+ * - `pSwapchain` is non-`NULL`
+ * - `pSwapchain` must have been initialized by `vkxCreateSwapchain`
+ * - `physicalDevice`, `device`, `surface`, and `pAllocator` must have been 
+ * passed to `vkxCreateSwapchain`
+ */
+VkResult vkxRecreateSwapchain(
+            VkPhysicalDevice physicalDevice,
+            VkDevice device,
+            VkSurfaceKHR surface,
+            VkExtent2D surfaceExtent,
+            const VkAllocationCallbacks* pAllocator,
+            VkxSwapchain* pSwapchain)
+                __attribute__((nonnull(6)));
+
+/**
+ * @brief Destroy swapchain.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[inout] pSwapchain
+ * Swapchain.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @pre
+ * If `pSwapchain` is non-`NULL` with non-`NULL` members,
+ * - `pSwapchain` must have been initialized by `vkxCreateSwapchain`
+ * - `device` and `pAllocator` must have been passed to `vkxCreateSwapchain`
+ *
+ * @post
+ * If `pSwapchain` is non-`NULL`,
+ * - `pSwapchain->(member)` is nullified
+ */
+void vkxDestroySwapchain(
+            VkDevice device,
+            VkxSwapchain* pSwapchain,
+            const VkAllocationCallbacks* pAllocator);
+
 /**@}*/
 
 #ifdef __cplusplus
