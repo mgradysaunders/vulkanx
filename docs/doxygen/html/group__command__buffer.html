@@ -73,6 +73,9 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ga7391126377350ca48b89843205a5d6f7"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__command__buffer.html#ga7391126377350ca48b89843205a5d6f7">vkxAllocateAndBeginCommandBuffers</a> (VkDevice device, const VkCommandBufferAllocateInfo *pAllocateInfo, const VkCommandBufferBeginInfo *pBeginInfos, VkCommandBuffer *pCommandBuffers)</td></tr>
+<tr class="memdesc:ga7391126377350ca48b89843205a5d6f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate and begin command buffers.  <a href="#ga7391126377350ca48b89843205a5d6f7">More...</a><br /></td></tr>
+<tr class="separator:ga7391126377350ca48b89843205a5d6f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae990fa15b6918a61f26e9369c46b196e"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__command__buffer.html#gae990fa15b6918a61f26e9369c46b196e">vkxFlushCommandBuffers</a> (VkDevice device, VkQueue queue, uint32_t commandBufferCount, const VkCommandBuffer *pCommandBuffers, const VkAllocationCallbacks *pAllocator)</td></tr>
 <tr class="memdesc:gae990fa15b6918a61f26e9369c46b196e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flush command buffers.  <a href="#gae990fa15b6918a61f26e9369c46b196e">More...</a><br /></td></tr>
 <tr class="separator:gae990fa15b6918a61f26e9369c46b196e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -80,6 +83,57 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p><code>&lt;vulkanx/command_buffer.h&gt;</code> </p>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="ga7391126377350ca48b89843205a5d6f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7391126377350ca48b89843205a5d6f7">&#9670;&nbsp;</a></span>vkxAllocateAndBeginCommandBuffers()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxAllocateAndBeginCommandBuffers </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkCommandBufferAllocateInfo *&#160;</td>
+          <td class="paramname"><em>pAllocateInfo</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkCommandBufferBeginInfo *&#160;</td>
+          <td class="paramname"><em>pBeginInfos</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandBuffer *&#160;</td>
+          <td class="paramname"><em>pCommandBuffers</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Allocate and begin command buffers. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocateInfo</td><td>Allocate info.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pBeginInfos</td><td>Begin info per command buffer.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pCommandBuffers</td><td>Command buffers. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="gae990fa15b6918a61f26e9369c46b196e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#gae990fa15b6918a61f26e9369c46b196e">&#9670;&nbsp;</a></span>vkxFlushCommandBuffers()</h2>
 

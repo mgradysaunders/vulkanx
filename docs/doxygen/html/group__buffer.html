@@ -80,6 +80,9 @@ Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVkxBufferGroup.html">VkxBufferGroup</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Buffer group.  <a href="structVkxBufferGroup.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVkxBufferRegion.html">VkxBufferRegion</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Buffer region.  <a href="structVkxBufferRegion.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -95,6 +98,15 @@ Functions</h2></td></tr>
 <tr class="memitem:ga4778ae7f4462bb9a6e3a9077e1332d00"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#ga4778ae7f4462bb9a6e3a9077e1332d00">vkxDestroyBufferGroup</a> (VkDevice device, <a class="el" href="structVkxBufferGroup.html">VkxBufferGroup</a> *pBufferGroup, const VkAllocationCallbacks *pAllocator)</td></tr>
 <tr class="memdesc:ga4778ae7f4462bb9a6e3a9077e1332d00"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy buffer group.  <a href="#ga4778ae7f4462bb9a6e3a9077e1332d00">More...</a><br /></td></tr>
 <tr class="separator:ga4778ae7f4462bb9a6e3a9077e1332d00"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga336cc7b16f523e8abe191b151a1cd15f"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#ga336cc7b16f523e8abe191b151a1cd15f">vkxCopyBuffer</a> (VkDevice device, VkQueue queue, VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t bufferCopyRegionCount, const VkBufferCopy *pBufferCopyRegions, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:ga336cc7b16f523e8abe191b151a1cd15f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy buffer.  <a href="#ga336cc7b16f523e8abe191b151a1cd15f">More...</a><br /></td></tr>
+<tr class="separator:ga336cc7b16f523e8abe191b151a1cd15f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga55b98fee8273d2b0156580c0b0b04836"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#ga55b98fee8273d2b0156580c0b0b04836">vkxGetBufferData</a> (VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, VkCommandPool commandPool, VkBuffer buffer, const <a class="el" href="structVkxBufferRegion.html">VkxBufferRegion</a> *pBufferRegion, const VkAllocationCallbacks *pAllocator, void *pData)</td></tr>
+<tr class="memdesc:ga55b98fee8273d2b0156580c0b0b04836"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get buffer data via temporary staging buffer.  <a href="#ga55b98fee8273d2b0156580c0b0b04836">More...</a><br /></td></tr>
+<tr class="separator:ga55b98fee8273d2b0156580c0b0b04836"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac276cfd29f8457629e6ecef7b31308df"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__buffer.html#gac276cfd29f8457629e6ecef7b31308df">vkxSetBufferData</a> (VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, VkCommandPool commandPool, VkBuffer buffer, const <a class="el" href="structVkxBufferRegion.html">VkxBufferRegion</a> *pBufferRegion, const void *pData, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:gac276cfd29f8457629e6ecef7b31308df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set buffer data via temporary staging buffer.  <a href="#gac276cfd29f8457629e6ecef7b31308df">More...</a><br /></td></tr>
+<tr class="separator:gac276cfd29f8457629e6ecef7b31308df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p><code>&lt;vulkanx/buffer.h&gt;</code> </p>
@@ -364,6 +376,245 @@ Functions</h2></td></tr>
 <li><code>pBufferGroup-&gt;sharedMemory.pMemoryViews</code> is <code>NULL</code> </li>
 </ul>
 </dd></dl>
+
+</div>
+</div>
+<a id="ga336cc7b16f523e8abe191b151a1cd15f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga336cc7b16f523e8abe191b151a1cd15f">&#9670;&nbsp;</a></span>vkxCopyBuffer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxCopyBuffer </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkBuffer&#160;</td>
+          <td class="paramname"><em>srcBuffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkBuffer&#160;</td>
+          <td class="paramname"><em>dstBuffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>bufferCopyRegionCount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkBufferCopy *&#160;</td>
+          <td class="paramname"><em>pBufferCopyRegions</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Copy buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">srcBuffer</td><td>Source buffer.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dstBuffer</td><td>Destination buffer.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bufferCopyRegionCount</td><td>Buffer copy region count.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pBufferCopyRegions</td><td>Buffer copy regions.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga55b98fee8273d2b0156580c0b0b04836"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga55b98fee8273d2b0156580c0b0b04836">&#9670;&nbsp;</a></span>vkxGetBufferData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxGetBufferData </td>
+          <td>(</td>
+          <td class="paramtype">VkPhysicalDevice&#160;</td>
+          <td class="paramname"><em>physicalDevice</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkBuffer&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structVkxBufferRegion.html">VkxBufferRegion</a> *&#160;</td>
+          <td class="paramname"><em>pBufferRegion</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>pData</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get buffer data via temporary staging buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">physicalDevice</td><td>Physical device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>Buffer.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pBufferRegion</td><td>Buffer region.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pData</td><td>Data.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>Buffer must have been created to support <code>VK_BUFFER_USAGE_TRANSFER_SRC_BIT</code>. </dd></dl>
+
+</div>
+</div>
+<a id="gac276cfd29f8457629e6ecef7b31308df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gac276cfd29f8457629e6ecef7b31308df">&#9670;&nbsp;</a></span>vkxSetBufferData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxSetBufferData </td>
+          <td>(</td>
+          <td class="paramtype">VkPhysicalDevice&#160;</td>
+          <td class="paramname"><em>physicalDevice</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkBuffer&#160;</td>
+          <td class="paramname"><em>buffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structVkxBufferRegion.html">VkxBufferRegion</a> *&#160;</td>
+          <td class="paramname"><em>pBufferRegion</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>pData</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set buffer data via temporary staging buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">physicalDevice</td><td>Physical device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">buffer</td><td>Buffer.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pBufferRegion</td><td>Buffer region.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pData</td><td>Data.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>Buffer must have been created to support <code>VK_BUFFER_USAGE_TRANSFER_DST_BIT</code>. </dd></dl>
 
 </div>
 </div>
