@@ -44,6 +44,28 @@ extern "C" {
 /**@{*/
 
 /**
+ * @brief Allocate and begin command buffers.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] pAllocateInfo
+ * Allocate info.
+ *
+ * @param[in] pBeginInfos
+ * Begin info per command buffer.
+ *
+ * @param[out] pCommandBuffer
+ * Command buffers.
+ */
+VkResult vkxAllocateAndBeginCommandBuffers(
+            VkDevice device,
+            const VkCommandBufferAllocateInfo* pAllocateInfo,
+            const VkCommandBufferBeginInfo* pBeginInfos,
+            VkCommandBuffer* pCommandBuffers) 
+                __attribute__((nonnull(2)));
+
+/**
  * @brief Flush command buffers.
  *
  * @param[in] device

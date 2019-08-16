@@ -26,9 +26,74 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*+-+*/
+#include <assert.h>
 #include <vulkanx/result.h>
 #include <vulkanx/command_buffer.h>
 
+// Allocate and begin command buffers.
+VkResult vkxAllocateAndBeginCommandBuffers(
+            VkDevice device,
+            const VkCommandBufferAllocateInfo* pAllocateInfo,
+            const VkCommandBufferBeginInfo* pBeginInfos,
+            VkCommandBuffer* pCommandBuffers) 
+{
+    assert(pAllocateInfo);
+    if (pAllocateInfo->commandBufferCount == 0) {
+        return VK_SUCCESS;
+    }
+
+    // Sanity check.
+    assert(pBeginInfos && pCommandBuffers);
+
+    VkResult result;
+    // Allocate command buffers.
+    result = 
+        vkAllocateCommandBuffers(
+                device,
+                pAllocateInfo,
+                pCommandBuffers);
+    // Allocate command buffers error?
+    if (VKX_IS_ERROR(result)) {
+        // Failure.
+        goto FAILURE;
+    }
+
+    for (uint32_t commandBufferIndex = 0;
+                  commandBufferIndex < pAllocateInfo->commandBufferCount;
+                  commandBufferIndex++) {
+        // Begin command buffer.
+        result = 
+            vkBeginCommandBuffer(
+                    pCommandBuffers[commandBufferIndex],
+                    &pBeginInfos[commandBufferIndex]);
+        // Begin command buffer error?
+        if (VKX_IS_ERROR(result)) {
+            // Free command buffers.
+            vkFreeCommandBuffers(
+                    device,
+                    pAllocateInfo->commandPool,
+                    pAllocateInfo->commandBufferCount,
+                    pCommandBuffers);
+            // Failure.
+            goto FAILURE;
+        }
+    }
+
+    // Success.
+    return VK_SUCCESS;
+
+FAILURE:
+
+    // Nullify.
+    for (uint32_t commandBufferIndex = 0;
+                  commandBufferIndex < pAllocateInfo->commandBufferCount;
+                  commandBufferIndex++) {
+        pCommandBuffers[commandBufferIndex] = VK_NULL_HANDLE;
+    }
+    return result;
+}
+
+// Flush command buffers.
 VkResult vkxFlushCommandBuffers(
             VkDevice device,
             VkQueue queue,
