@@ -225,23 +225,59 @@ void vkxDestroyBufferGroup(
             VkxBufferGroup* pBufferGroup,
             const VkAllocationCallbacks* pAllocator);
 
-#if 0
 /**
- * @brief Buffer data access info.
+ * @brief Copy buffer.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] queue
+ * Queue.
+ *
+ * @param[in] commandPool
+ * Command pool.
+ *
+ * @param[in] srcBuffer
+ * Source buffer.
+ *
+ * @param[in] dstBuffer
+ * Destination buffer.
+ *
+ * @param[in] bufferCopyRegionCount
+ * Buffer copy region count.
+ *
+ * @param[in] pBufferCopyRegions
+ * Buffer copy regions.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
  */
-typedef struct VkxBufferDataAccessInfo_
-{
-    /**
-     * @brief Buffer.
-     */
-    VkBuffer buffer;
+VkResult vkxCopyBuffer(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkBuffer srcBuffer,
+            VkBuffer dstBuffer,
+            uint32_t bufferCopyRegionCount,
+            const VkBufferCopy* pBufferCopyRegions,
+            const VkAllocationCallbacks* pAllocator);
 
+/**
+ * @brief Buffer region.
+ */
+typedef struct VkxBufferRegion_
+{
     /**
      * @brief Offset in bytes.
      */
     VkDeviceSize offset;
+
+    /**
+     * @brief Size in bytes.
+     */
+    VkDeviceSize size;
 }
-VkxBufferDataAccessInfo;
+VkxBufferRegion;
 
 /**
  * @brief Get buffer data via temporary staging buffer.
@@ -258,14 +294,14 @@ VkxBufferDataAccessInfo;
  * @param[in] commandPool
  * Command pool.
  *
+ * @param[in] buffer
+ * Buffer.
+ *
+ * @param[in] pBufferRegion
+ * Buffer region.
+ *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
- *
- * @param[in] pAccessInfo
- * Data access info.
- *
- * @param[in] dataSize
- * Data size in bytes.
  *
  * @param[out] pData
  * Data.
@@ -279,11 +315,11 @@ VkResult vkxGetBufferData(
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
+            VkBuffer buffer,
+            const VkxBufferRegion* pBufferRegion,
             const VkAllocationCallbacks* pAllocator,
-            const VkxBufferDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
             void* pData)
-                __attribute__((nonnull(5)));
+                __attribute__((nonnull(6)));
 
 /**
  * @brief Set buffer data via temporary staging buffer.
@@ -300,17 +336,17 @@ VkResult vkxGetBufferData(
  * @param[in] commandPool
  * Command pool.
  *
- * @param[in] pAllocator
- * _Optional_. Allocation callbacks.
+ * @param[in] buffer
+ * Buffer.
  *
- * @param[in] pAccessInfo
- * Data access info.
- *
- * @param[in] dataSize
- * Data size in bytes.
+ * @param[in] pBufferRegion
+ * Buffer region.
  *
  * @param[in] pData
  * Data.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
  *
  * @note
  * Buffer must have been created to
@@ -321,12 +357,11 @@ VkResult vkxSetBufferData(
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
-            const VkAllocationCallbacks* pAllocator,
-            const VkxBufferDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
-            const void* pData)
-                __attribute__((nonnull(5)));
-#endif
+            VkBuffer buffer,
+            const VkxBufferRegion* pBufferRegion,
+            const void* pData,
+            const VkAllocationCallbacks* pAllocator)
+                __attribute__((nonnull(6)));
 
 /**@}*/
 

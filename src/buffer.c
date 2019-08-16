@@ -280,37 +280,116 @@ void vkxDestroyBufferGroup(
     }
 }
 
-#if 0
+// Copy buffer.
+VkResult vkxCopyBuffer(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkBuffer srcBuffer,
+            VkBuffer dstBuffer,
+            uint32_t bufferCopyRegionCount,
+            const VkBufferCopy* pBufferCopyRegions,
+            const VkAllocationCallbacks* pAllocator)
+{
+    if (srcBuffer == dstBuffer ||
+        bufferCopyRegionCount == 0) {
+        return VK_SUCCESS;
+    }
+    // Sanity check.
+    assert(pBufferCopyRegions);
+
+    // Command buffer allocate info.
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = NULL,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandPool = commandPool,
+        .commandBufferCount = 1
+    };
+
+    // Command buffer begin info.
+    VkCommandBufferBeginInfo commandBufferBeginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = NULL
+    };
+
+    // Command buffer.
+    VkCommandBuffer commandBuffer;
+    {
+        // Allocate and begin command buffer.
+        VkResult result = 
+            vkxAllocateAndBeginCommandBuffers(
+                    device,
+                    &commandBufferAllocateInfo,
+                    &commandBufferBeginInfo,
+                    &commandBuffer);
+        // Allocate and begin command buffer error?
+        if (VKX_IS_ERROR(result)) {
+            return result;
+        }
+    }
+
+    // Copy buffer.
+    vkCmdCopyBuffer(
+            commandBuffer, 
+            srcBuffer, 
+            dstBuffer,
+            bufferCopyRegionCount, 
+            pBufferCopyRegions);
+
+    // End command buffer.
+    vkEndCommandBuffer(commandBuffer);
+
+    // Flush command buffer.
+    VkResult result = 
+        vkxFlushCommandBuffers(
+                device, 
+                queue, 
+                1, &commandBuffer,
+                pAllocator);
+
+    // Free command buffer.
+    vkFreeCommandBuffers(
+            device, 
+            commandPool,
+            1, &commandBuffer);
+
+    return result;
+}
+
 // Get buffer data.
 VkResult vkxGetBufferData(
             VkPhysicalDevice physicalDevice,
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
+            VkBuffer buffer,
+            const VkxBufferRegion* pBufferRegion,
             const VkAllocationCallbacks* pAllocator,
-            const VkxBufferDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
             void* pData)
 {
-    assert(pAccessInfo);
-    assert(pData || dataSize == 0);
-    if (dataSize == 0) {
+    assert(pBufferRegion);
+    assert(pData || pBufferRegion->size == 0);
+    if (pBufferRegion->size == 0) {
         return VK_SUCCESS;
     }
 
-    VkxBuffer dstBuffer;
+    VkxBuffer stagingBuffer;
     {
-        // Create staging buffer.
+        // Staging buffer create info.
         VkBufferCreateInfo bufferCreateInfo = {
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
             .pNext = NULL,
             .flags = 0,
-            .size = dataSize,
+            .size = pBufferRegion->size,
             .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             .queueFamilyIndexCount = 0,
             .pQueueFamilyIndices = NULL
         };
+        // Create staging buffer.
         VkResult result = 
             vkxCreateBuffer(
                     physicalDevice,
@@ -319,117 +398,56 @@ VkResult vkxGetBufferData(
                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                     pAllocator,
-                    &dstBuffer);
+                    &stagingBuffer);
+        // Create staging buffer error?
         if (VKX_IS_ERROR(result)) {
             return result;
         }
     }
 
-    VkCommandBuffer commandBuffer;
     {
-        // Allocate command buffer.
-        VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .pNext = NULL,
-            .commandPool = commandPool,
-            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-            .commandBufferCount = 1
-        };
-        VkResult result = 
-            vkAllocateCommandBuffers(
-                    device,
-                    &commandBufferAllocateInfo,
-                    &commandBuffer);
-        if (VKX_IS_ERROR(result)) {
-            // Destroy staging buffer.
-            vkxDestroyBuffer(device, &dstBuffer, pAllocator);
-            return result;
-        }
-    }
-
-    {
-        // Begin command buffer.
-        VkCommandBufferBeginInfo commandBufferBeginInfo = {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-            .pNext = NULL,
-            .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-            .pInheritanceInfo = NULL
-        };
-        VkResult result = 
-            vkBeginCommandBuffer(
-                    commandBuffer,
-                    &commandBufferBeginInfo);
-        if (VKX_IS_ERROR(result)) {
-            // Free command buffer.
-            vkFreeCommandBuffers(
-                    device, 
-                    commandPool, 
-                    1, &commandBuffer);
-            // Destroy staging buffer.
-            vkxDestroyBuffer(device, &dstBuffer, pAllocator);
-            return result;
-        }
-    }
-
-    {
-        // Buffer copy.
-        VkBufferCopy bufferCopy = {
-            .srcOffset = pAccessInfo->offset,
+        // Buffer copy region.
+        VkBufferCopy bufferCopyRegion = {
+            .srcOffset = pBufferRegion->offset,
             .dstOffset = 0,
-            .size = dataSize
+            .size = pBufferRegion->size
         };
-        vkCmdCopyBuffer(
-                commandBuffer,
-                pAccessInfo->buffer,
-                dstBuffer.buffer,
-                1, &bufferCopy);
-    }
-
-    // End command buffer.
-    vkEndCommandBuffer(commandBuffer);
-
-    {
-        // Flush command buffer.
+        // Copy.
         VkResult result = 
-            vkxFlushCommandBuffers(
-                    device, 
-                    queue, 
-                    1, &commandBuffer, 
-                    pAllocator);
-        if (VKX_IS_ERROR(result)) {
-            // Free command buffer.
-            vkFreeCommandBuffers(
-                    device, 
+            vkxCopyBuffer(
+                    device,
+                    queue,
                     commandPool,
-                    1, &commandBuffer);
+                    buffer,
+                    stagingBuffer.buffer,
+                    1, &bufferCopyRegion,
+                    pAllocator);
+        // Copy error?
+        if (VKX_IS_ERROR(result)) {
             // Destroy staging buffer.
-            vkxDestroyBuffer(device, &dstBuffer, pAllocator);
+            vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
             return result;
         }
     }
 
-    // Read from staging buffer.
-    void* pMappedData = NULL;
+    // Map staging buffer data.
+    void* pStagingBufferData = NULL;
     VkResult result = 
         vkMapMemory(
                 device,
-                dstBuffer.memory,
-                0, dataSize,
-                0, &pMappedData);
+                stagingBuffer.memory,
+                0, pBufferRegion->size,
+                0, &pStagingBufferData);
+    // Map staging buffer data ok?
     if (VKX_IS_OK(result)) {
-        memcpy(pData, pMappedData, dataSize);
-        vkUnmapMemory(device, dstBuffer.memory);
-        // Fall through.
+        // Read staging buffer data.
+        memcpy(pData, pStagingBufferData, pBufferRegion->size);
+        // Unmap staging buffer data.
+        vkUnmapMemory(device, stagingBuffer.memory);
     }
 
-    // Free command buffer.
-    vkFreeCommandBuffers(
-            device, 
-            commandPool, 
-            1, &commandBuffer);
-
     // Destroy staging buffer.
-    vkxDestroyBuffer(device, &dstBuffer, pAllocator);
+    vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
 
     return result;
 }
@@ -440,104 +458,82 @@ VkResult vkxSetBufferData(
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
-            const VkAllocationCallbacks* pAllocator,
-            const VkxBufferDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
-            const void* pData)
+            VkBuffer buffer,
+            const VkxBufferRegion* pBufferRegion, 
+            const void* pData, 
+            const VkAllocationCallbacks* pAllocator)
 {
-    assert(pAccessInfo);
-    assert(pData || dataSize == 0);
-    if (dataSize == 0) {
-        return;
+    assert(pBufferRegion);
+    assert(pData || pBufferRegion->size == 0);
+    if (pBufferRegion->size == 0) {
+        return VK_SUCCESS;
     }
 
-    // Create staging buffer.
-    VkxBuffer srcBuffer;
-    VkBufferCreateInfo srcBufferCreateInfo = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = NULL,
-        .flags = 0,
-        .size = dataSize,
-        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 0,
-        .pQueueFamilyIndices = NULL
-    };
-    vkxCreateBuffer(
-            physicalDevice,
-            device,
-            &srcBufferCreateInfo,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &srcBuffer);
-
-    // Write to staging buffer.
-    void* pMappedData = NULL;
-    (void)
-    VKX_VERIFIED_CALL(
-        vkMapMemory,
+    VkxBuffer stagingBuffer;
+    {
+        // Staging buffer create info.
+        VkBufferCreateInfo bufferCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .size = pBufferRegion->size,
+            .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = NULL
+        };
+        // Create staging buffer.
+        vkxCreateBuffer(
+                physicalDevice,
                 device,
-                srcBuffer.memory,
-                (VkDeviceSize)0, dataSize,
-                (VkMemoryMapFlags)0, 
-                &pMappedData);
-    memcpy(pMappedData, pData, dataSize);
-    vkUnmapMemory(device, srcBuffer.memory);
+                &bufferCreateInfo,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                pAllocator,
+                &stagingBuffer);
+    }
 
-    // Allocate command buffer.
-    VkCommandBuffer commandBuffer;
-    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .pNext = NULL,
-        .commandPool = commandPool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
-    };
-    (void)
-    VKX_VERIFIED_CALL(
-        vkAllocateCommandBuffers,
-                device,
-                &commandBufferAllocateInfo,
-                &commandBuffer);
+    {
+        // Map staging buffer data.
+        void* pStagingBufferData = NULL;
+        VkResult result = 
+            vkMapMemory(
+                    device,
+                    stagingBuffer.memory,
+                    0, pBufferRegion->size,
+                    0, &pStagingBufferData);
+        // Map staging buffer data error?
+        if (VKX_IS_ERROR(result)) {
+            // Destroy staging buffer.
+            vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
+            return result;
+        }
 
-    // Begin command buffer.
-    VkCommandBufferBeginInfo commandBufferBeginInfo = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = NULL,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = NULL
-    };
-    (void)
-    VKX_VERIFIED_CALL(
-        vkBeginCommandBuffer,
-                commandBuffer,
-                &commandBufferBeginInfo);
+        // Write staging buffer data.
+        memcpy(pStagingBufferData, pData, pBufferRegion->size);
 
-    // Buffer copy.
-    VkBufferCopy bufferCopy = {
+        // Unmap staging buffer data.
+        vkUnmapMemory(device, stagingBuffer.memory);
+    }
+
+    // Copy.
+    VkBufferCopy bufferCopyRegion = {
         .srcOffset = 0,
-        .dstOffset = pAccessInfo->offset,
-        .size = dataSize
+        .dstOffset = pBufferRegion->offset,
+        .size = pBufferRegion->size
     };
-    vkCmdCopyBuffer(
-            commandBuffer,
-            srcBuffer.buffer,
-            pAccessInfo->buffer,
-            1, &bufferCopy);
-
-    // End command buffer.
-    vkEndCommandBuffer(commandBuffer);
-
-    // Flush command buffer.
-    vkxFlushCommandBuffers(device, queue, 1, &commandBuffer);
-
-    // Free command buffer.
-    vkFreeCommandBuffers(
-            device,
-            commandPool,
-            1, &commandBuffer);
+    VkResult result = 
+        vkxCopyBuffer(
+                device,
+                queue,
+                commandPool,
+                stagingBuffer.buffer,
+                buffer,
+                1, &bufferCopyRegion,
+                pAllocator);
 
     // Destroy staging buffer.
-    vkxDestroyBuffer(device, &srcBuffer, pAllocator);
+    vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
+
+    return result;
 }
-#endif
