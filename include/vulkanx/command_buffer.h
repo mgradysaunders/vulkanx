@@ -55,7 +55,7 @@ extern "C" {
  * @param[in] pBeginInfos
  * Begin info per command buffer.
  *
- * @param[out] pCommandBuffer
+ * @param[out] pCommandBuffers
  * Command buffers.
  */
 VkResult vkxAllocateAndBeginCommandBuffers(
