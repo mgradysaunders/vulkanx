@@ -162,8 +162,7 @@ VkxSwapchain;
  * - `graphicsQueueFamilyIndex` is valid and supports graphics commands
  * - `presentQueueFamilyIndex` is valid and supports present commands
  * - `surface` is valid
- * - `pSwapchain` is non-`NULL`
- * - `pSwapchain` is uninitialized
+ * - `pSwapchain` is non-`NULL` and uninitialized
  */
 VkResult vkxCreateSwapchain(
             VkPhysicalDevice physicalDevice,
@@ -198,13 +197,12 @@ VkResult vkxCreateSwapchain(
  * Swapchain.
  *
  * @pre
- * - `physicalDevice` is valid
- * - `device` is valid
- * - `surface` is valid
+ * - `physicalDevice` was used to create `pSwapchain`
+ * - `device` was used to create `pSwapchain`
+ * - `surface` was used to create `pSwapchain`
+ * - `pAllocator` was used to create `pSwapchain`
  * - `pSwapchain` is non-`NULL`
- * - `pSwapchain` must have been initialized by `vkxCreateSwapchain`
- * - `physicalDevice`, `device`, `surface`, and `pAllocator` must have been 
- * passed to `vkxCreateSwapchain`
+ * - `pSwapchain` was previously created by `vkxCreateSwapchain`
  */
 VkResult vkxRecreateSwapchain(
             VkPhysicalDevice physicalDevice,
@@ -228,13 +226,12 @@ VkResult vkxRecreateSwapchain(
  * _Optional_. Allocation callbacks.
  *
  * @pre
- * If `pSwapchain` is non-`NULL` with non-`NULL` members,
- * - `pSwapchain` must have been initialized by `vkxCreateSwapchain`
- * - `device` and `pAllocator` must have been passed to `vkxCreateSwapchain`
+ * - `device` was used to create `pSwapchain`
+ * - `pAllocator` was used to create `pSwapchain`
+ * - `pSwapchain` was previously created by `vkxCreateSwapchain`
  *
  * @post
- * If `pSwapchain` is non-`NULL`,
- * - `pSwapchain->(member)` is nullified
+ * - `pSwapchain` is nullified
  */
 void vkxDestroySwapchain(
             VkDevice device,

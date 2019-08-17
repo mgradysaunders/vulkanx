@@ -66,14 +66,12 @@ extern "C" {
  *
  * @param[in] ppRequestedLayerNames
  * Requested instance layer names. 
- * If `NULL`, then `requestedLayerCount` must be `0`.
  *
  * @param[in] requestedExtensionCount
  * Requested instance extension count.
  *
  * @param[in] ppRequestedExtensionNames
  * Requested instance extension names.
- * If `NULL`, then `requestedExtensionCount` must be `0`.
  *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
@@ -145,7 +143,14 @@ VkPhysicalDevice vkxSelectPhysicalDevice(
  *
  * @param[in] pCandidateFormats
  * Candidate formats.
- * If `NULL`, then `candidateFormatCount` must be `0`.
+ *
+ * @pre
+ * - `physicalDevice` is valid
+ * - `pCandidateFormats` points to `candidateFormatCount` values
+ *
+ * @return
+ * Format in `pCandidateFormats` with `requestedFeatures`, or
+ * `VK_FORMAT_UNDEFINED` if no such format exists.
  */
 VkFormat vkxSelectFormat(
             VkPhysicalDevice physicalDevice,
