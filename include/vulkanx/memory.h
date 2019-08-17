@@ -185,10 +185,20 @@ VkxSharedDeviceMemory;
  * @pre
  * - `physicalDevice` is valid
  * - `device` is valid
- * - `pMemoryRequirements` points to `memoryRequirementCount` elements
- * - `pMemoryPropertyFlags` points to `memoryRequirementCount` elements
+ * - `pMemoryRequirements` points to `memoryRequirementCount` values
+ * - `pMemoryPropertyFlags` points to `memoryRequirementCount` values
  * - `pSharedMemory` is non-`NULL`
  * - `pSharedMemory` is uninitialized
+ *
+ * @post
+ * - if result indicates success, `pSharedMemory` is properly initialized
+ * - if result indicates failure, `pSharedMemory` is nullified
+ *
+ * @note
+ * If `memoryRequirementCount` is `0`,
+ * `pMemoryRequirements` may be `NULL`,
+ * `pMemoryPropertyFlags` may be `NULL`,
+ * `pSharedMemory` is nullified, and result is `VK_SUCCESS`.
  */
 VkResult vkxAllocateSharedMemory(
             VkPhysicalDevice physicalDevice,
@@ -212,20 +222,16 @@ VkResult vkxAllocateSharedMemory(
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
- * @note
- * If `pSharedMemory` is `NULL`, does nothing.
- *
  * @pre
- * If `pSharedMemory` is non-`NULL` with non-`NULL` members,
- * - `pSharedMemory` must have been initialized by `vkxAllocateSharedMemory`
- * - `device` must have been passed to `vkxAllocateSharedMemory`
+ * - `device` was used to allocate `pSharedMemory`
+ * - `pAllocator` was used to allocate `pSharedMemory`
+ * - `pSharedMemory` was previously allocated by `vkxAllocateSharedMemory`
  *
  * @post
- * If `pSharedMemory` is non-`NULL`,
- * - `pSharedMemory->uniqueMemoryCount` is `0`
- * - `pSharedMemory->pUniqueMemories` is `NULL`
- * - `pSharedMemory->memoryViewCount` is `0`
- * - `pSharedMemory->pMemoryViews` is `NULL`
+ * - `pSharedMemory` is nullified
+ *
+ * @note
+ * Does nothing if `pSharedMemory` is `NULL`.
  */
 void vkxFreeSharedMemory(
             VkDevice device,

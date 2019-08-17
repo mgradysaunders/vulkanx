@@ -85,11 +85,12 @@ VkxImage;
  * - `physicalDevice` is valid
  * - `device` is valid
  * - `pImageCreateInfo` is non-`NULL`
- * - `pImage` is non-`NULL` and uninitialized
+ * - `pImage` is non-`NULL` 
+ * - `pImage` is uninitialized
  *
  * @post
- * - if result indicates success, `pImage` is properly initialized
- * - if result indicates failure, `pImage` is nullified
+ * - on success, `pImage` is properly initialized
+ * - on failure, `pImage` is nullified
  */
 VkResult vkxCreateImage(
             VkPhysicalDevice physicalDevice,
@@ -179,18 +180,18 @@ VkxImageGroup;
  * - `device` is valid
  * - `pImageCreateInfos` points to `imageCount` values
  * - `pMemoryPropertyFlags` points to `imageCount` values
- * - `pImageGroup` is non-`NULL` and uninitialized
+ * - `pImageGroup` is non-`NULL` 
+ * - `pImageGroup` is uninitialized
  *
  * @post
- * - if result indicates success, `pImageGroup` is properly initialized
- * - if result indicates failure, `pImageGroup` is nullified
+ * - on success, `pImageGroup` is properly initialized
+ * - on failure, `pImageGroup` is nullified
  *
  * @note
- * If `imageCount` is `0`
- * - `pImageCreateInfos` may be `NULL`
- * - `pMemoryPropertyFlags` may be `NULL`
- * - `pImageGroup` is nullified
- * - result is `VK_SUCCESS` 
+ * If `imageCount` is `0`, 
+ * `pImageCreateInfos` may be `NULL`,
+ * `pMemoryPropertyFlags` may be `NULL`, 
+ * `pImageGroup` is nullified, and result is `VK_SUCCESS`.
  */
 VkResult vkxCreateImageGroup(
             VkPhysicalDevice physicalDevice,

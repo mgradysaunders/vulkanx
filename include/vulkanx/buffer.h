@@ -85,11 +85,12 @@ VkxBuffer;
  * - `physicalDevice` is valid
  * - `device` is valid
  * - `pBufferCreateInfo` is non-`NULL`
- * - `pBuffer` is non-`NULL` and uninitialized
+ * - `pBuffer` is non-`NULL` 
+ * - `pBuffer` is uninitialized
  *
  * @post
- * - if result indicates success, `pBuffer` is properly initialized
- * - if result indicates failure, `pBuffer` is nullified
+ * - on success, `pBuffer` is properly initialized
+ * - on failure, `pBuffer` is nullified
  */
 VkResult vkxCreateBuffer(
             VkPhysicalDevice physicalDevice,
@@ -178,20 +179,20 @@ VkxBufferGroup;
  * @pre
  * - `physicalDevice` is valid
  * - `device` is valid
- * - `pBufferCreateInfos` points to `bufferCount` elements
- * - `pMemoryPropertyFlags` points to `bufferCount` elements
- * - `pBufferGroup` is non-`NULL` and uninitialized
+ * - `pBufferCreateInfos` points to `bufferCount` values
+ * - `pMemoryPropertyFlags` points to `bufferCount` values
+ * - `pBufferGroup` is non-`NULL` 
+ * - `pBufferGroup` is uninitialized
  *
  * @post
- * - if result indicates success, `pBufferGroup` is properly initialized
- * - if result indicates failure, `pBufferGroup` is nullified
+ * - on success, `pBufferGroup` is properly initialized
+ * - on failure, `pBufferGroup` is nullified
  *
  * @note
- * If `bufferCount` is `0`
- * - `pBufferCreateInfos` may be `NULL`
- * - `pMemoryPropertyFlags` may be `NULL`
- * - `pBufferGroup` is nullified
- * - result is `VK_SUCCESS` 
+ * If `bufferCount` is `0`,
+ * `pBufferCreateInfos` may be `NULL`,
+ * `pMemoryPropertyFlags` may be `NULL`,
+ * `pBufferGroup` is nullified, and result is `VK_SUCCESS`.
  */
 VkResult vkxCreateBufferGroup(
             VkPhysicalDevice physicalDevice,

@@ -162,7 +162,12 @@ VkxSwapchain;
  * - `graphicsQueueFamilyIndex` is valid and supports graphics commands
  * - `presentQueueFamilyIndex` is valid and supports present commands
  * - `surface` is valid
- * - `pSwapchain` is non-`NULL` and uninitialized
+ * - `pSwapchain` is non-`NULL`
+ * - `pSwapchain` is uninitialized
+ *
+ * @post
+ * - on success, `pSwapchain` is properly initialized
+ * - on failure, `pSwapchain` is nullified
  */
 VkResult vkxCreateSwapchain(
             VkPhysicalDevice physicalDevice,
@@ -232,6 +237,9 @@ VkResult vkxRecreateSwapchain(
  *
  * @post
  * - `pSwapchain` is nullified
+ * 
+ * @note
+ * Does nothing if `pSwapchain` is `NULL`.
  */
 void vkxDestroySwapchain(
             VkDevice device,
