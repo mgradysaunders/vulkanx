@@ -191,8 +191,8 @@ VkxSharedDeviceMemory;
  * - `pSharedMemory` is uninitialized
  *
  * @post
- * - if result indicates success, `pSharedMemory` is properly initialized
- * - if result indicates failure, `pSharedMemory` is nullified
+ * - on success, `pSharedMemory` is properly initialized
+ * - on failure, `pSharedMemory` is nullified
  *
  * @note
  * If `memoryRequirementCount` is `0`,
