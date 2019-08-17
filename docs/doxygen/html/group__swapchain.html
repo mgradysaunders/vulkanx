@@ -175,7 +175,13 @@ Functions</h2></td></tr>
 <li><code>graphicsQueueFamilyIndex</code> is valid and supports graphics commands</li>
 <li><code>presentQueueFamilyIndex</code> is valid and supports present commands</li>
 <li><code>surface</code> is valid</li>
-<li><code>pSwapchain</code> is non-<code>NULL</code> and uninitialized </li>
+<li><code>pSwapchain</code> is non-<code>NULL</code></li>
+<li><code>pSwapchain</code> is uninitialized</li>
+</ul>
+</dd></dl>
+<dl class="section post"><dt>Postcondition</dt><dd><ul>
+<li>on success, <code>pSwapchain</code> is properly initialized</li>
+<li>on failure, <code>pSwapchain</code> is nullified </li>
 </ul>
 </dd></dl>
 
@@ -303,9 +309,10 @@ Functions</h2></td></tr>
 </ul>
 </dd></dl>
 <dl class="section post"><dt>Postcondition</dt><dd><ul>
-<li><code>pSwapchain</code> is nullified </li>
+<li><code>pSwapchain</code> is nullified</li>
 </ul>
 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Does nothing if <code>pSwapchain</code> is <code>NULL</code>. </dd></dl>
 
 </div>
 </div>

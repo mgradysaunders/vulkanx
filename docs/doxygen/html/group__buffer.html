@@ -177,12 +177,13 @@ Functions</h2></td></tr>
 <li><code>physicalDevice</code> is valid</li>
 <li><code>device</code> is valid</li>
 <li><code>pBufferCreateInfo</code> is non-<code>NULL</code></li>
-<li><code>pBuffer</code> is non-<code>NULL</code> and uninitialized</li>
+<li><code>pBuffer</code> is non-<code>NULL</code></li>
+<li><code>pBuffer</code> is uninitialized</li>
 </ul>
 </dd></dl>
 <dl class="section post"><dt>Postcondition</dt><dd><ul>
-<li>if result indicates success, <code>pBuffer</code> is properly initialized</li>
-<li>if result indicates failure, <code>pBuffer</code> is nullified </li>
+<li>on success, <code>pBuffer</code> is properly initialized</li>
+<li>on failure, <code>pBuffer</code> is nullified </li>
 </ul>
 </dd></dl>
 
@@ -316,23 +317,18 @@ Functions</h2></td></tr>
 <dl class="section pre"><dt>Precondition</dt><dd><ul>
 <li><code>physicalDevice</code> is valid</li>
 <li><code>device</code> is valid</li>
-<li><code>pBufferCreateInfos</code> points to <code>bufferCount</code> elements</li>
-<li><code>pMemoryPropertyFlags</code> points to <code>bufferCount</code> elements</li>
-<li><code>pBufferGroup</code> is non-<code>NULL</code> and uninitialized</li>
+<li><code>pBufferCreateInfos</code> points to <code>bufferCount</code> values</li>
+<li><code>pMemoryPropertyFlags</code> points to <code>bufferCount</code> values</li>
+<li><code>pBufferGroup</code> is non-<code>NULL</code></li>
+<li><code>pBufferGroup</code> is uninitialized</li>
 </ul>
 </dd></dl>
 <dl class="section post"><dt>Postcondition</dt><dd><ul>
-<li>if result indicates success, <code>pBufferGroup</code> is properly initialized</li>
-<li>if result indicates failure, <code>pBufferGroup</code> is nullified</li>
+<li>on success, <code>pBufferGroup</code> is properly initialized</li>
+<li>on failure, <code>pBufferGroup</code> is nullified</li>
 </ul>
 </dd></dl>
-<dl class="section note"><dt>Note</dt><dd>If <code>bufferCount</code> is <code>0</code><ul>
-<li><code>pBufferCreateInfos</code> may be <code>NULL</code></li>
-<li><code>pMemoryPropertyFlags</code> may be <code>NULL</code></li>
-<li><code>pBufferGroup</code> is nullified</li>
-<li>result is <code>VK_SUCCESS</code> </li>
-</ul>
-</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If <code>bufferCount</code> is <code>0</code>, <code>pBufferCreateInfos</code> may be <code>NULL</code>, <code>pMemoryPropertyFlags</code> may be <code>NULL</code>, <code>pBufferGroup</code> is nullified, and result is <code>VK_SUCCESS</code>. </dd></dl>
 
 </div>
 </div>

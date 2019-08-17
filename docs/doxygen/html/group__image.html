@@ -186,12 +186,13 @@ Functions</h2></td></tr>
 <li><code>physicalDevice</code> is valid</li>
 <li><code>device</code> is valid</li>
 <li><code>pImageCreateInfo</code> is non-<code>NULL</code></li>
-<li><code>pImage</code> is non-<code>NULL</code> and uninitialized</li>
+<li><code>pImage</code> is non-<code>NULL</code></li>
+<li><code>pImage</code> is uninitialized</li>
 </ul>
 </dd></dl>
 <dl class="section post"><dt>Postcondition</dt><dd><ul>
-<li>if result indicates success, <code>pImage</code> is properly initialized</li>
-<li>if result indicates failure, <code>pImage</code> is nullified </li>
+<li>on success, <code>pImage</code> is properly initialized</li>
+<li>on failure, <code>pImage</code> is nullified </li>
 </ul>
 </dd></dl>
 
@@ -326,21 +327,16 @@ Functions</h2></td></tr>
 <li><code>device</code> is valid</li>
 <li><code>pImageCreateInfos</code> points to <code>imageCount</code> values</li>
 <li><code>pMemoryPropertyFlags</code> points to <code>imageCount</code> values</li>
-<li><code>pImageGroup</code> is non-<code>NULL</code> and uninitialized</li>
+<li><code>pImageGroup</code> is non-<code>NULL</code></li>
+<li><code>pImageGroup</code> is uninitialized</li>
 </ul>
 </dd></dl>
 <dl class="section post"><dt>Postcondition</dt><dd><ul>
-<li>if result indicates success, <code>pImageGroup</code> is properly initialized</li>
-<li>if result indicates failure, <code>pImageGroup</code> is nullified</li>
+<li>on success, <code>pImageGroup</code> is properly initialized</li>
+<li>on failure, <code>pImageGroup</code> is nullified</li>
 </ul>
 </dd></dl>
-<dl class="section note"><dt>Note</dt><dd>If <code>imageCount</code> is <code>0</code><ul>
-<li><code>pImageCreateInfos</code> may be <code>NULL</code></li>
-<li><code>pMemoryPropertyFlags</code> may be <code>NULL</code></li>
-<li><code>pImageGroup</code> is nullified</li>
-<li>result is <code>VK_SUCCESS</code> </li>
-</ul>
-</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If <code>imageCount</code> is <code>0</code>, <code>pImageCreateInfos</code> may be <code>NULL</code>, <code>pMemoryPropertyFlags</code> may be <code>NULL</code>, <code>pImageGroup</code> is nullified, and result is <code>VK_SUCCESS</code>. </dd></dl>
 
 </div>
 </div>
