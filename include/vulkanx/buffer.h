@@ -85,8 +85,11 @@ VkxBuffer;
  * - `physicalDevice` is valid
  * - `device` is valid
  * - `pBufferCreateInfo` is non-`NULL`
- * - `pBuffer` is non-`NULL`
- * - `pBuffer` is uninitialized
+ * - `pBuffer` is non-`NULL` and uninitialized
+ *
+ * @post
+ * - if result indicates success, `pBuffer` is properly initialized
+ * - if result indicates failure, `pBuffer` is nullified
  */
 VkResult vkxCreateBuffer(
             VkPhysicalDevice physicalDevice,
@@ -109,18 +112,17 @@ VkResult vkxCreateBuffer(
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
- * @note
- * If `pBuffer` is `NULL`, does nothing.
- *
  * @pre
- * If `pBuffer` is non-`NULL` with non-`NULL` members,
- * - `pBuffer` must have been initialized by `vkxCreateBuffer`
- * - `device` must have been passed to `vkxCreateBuffer`
+ * - `device` is valid
+ * - `device` was used to create `pBuffer`
+ * - `pAllocator` was used to create `pBuffer`
+ * - `pBuffer` was previously created by `vkxCreateBuffer`
  *
  * @post
- * If `pBuffer` is non-`NULL`,
- * - `pBuffer->buffer` is `VK_NULL_HANDLE`
- * - `pBuffer->memory` is `VK_NULL_HANDLE`
+ * - `pBuffer` is nullified
+ *
+ * @note
+ * If `pBuffer` is `NULL`, does nothing.
  */
 void vkxDestroyBuffer(
             VkDevice device,
@@ -178,8 +180,18 @@ VkxBufferGroup;
  * - `device` is valid
  * - `pBufferCreateInfos` points to `bufferCount` elements
  * - `pMemoryPropertyFlags` points to `bufferCount` elements
- * - `pBufferGroup` is non-`NULL`
- * - `pBufferGroup` is uninitialized
+ * - `pBufferGroup` is non-`NULL` and uninitialized
+ *
+ * @post
+ * - if result indicates success, `pBufferGroup` is properly initialized
+ * - if result indicates failure, `pBufferGroup` is nullified
+ *
+ * @note
+ * If `bufferCount` is `0`
+ * - `pBufferCreateInfos` may be `NULL`
+ * - `pMemoryPropertyFlags` may be `NULL`
+ * - `pBufferGroup` is nullified
+ * - result is `VK_SUCCESS` 
  */
 VkResult vkxCreateBufferGroup(
             VkPhysicalDevice physicalDevice,
@@ -203,22 +215,16 @@ VkResult vkxCreateBufferGroup(
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
- * @note
- * If `pBufferGroup` is `NULL`, does nothing.
- *
  * @pre
- * If `pBufferGroup` is non-`NULL` with non-`NULL` members,
- * - `pBufferGroup` must have been initialized by `vkxCreateBufferGroup`
- * - `device` must have been passed to `vkxCreateBufferGroup`
+ * - `device` was used to create `pBufferGroup`
+ * - `pAllocator` was used to create `pBufferGroup`
+ * - `pBufferGroup` was previously created by `vkxCreateBufferGroup`
  *
  * @post
- * If `pBufferGroup` is non-`NULL`,
- * - `pBufferGroup->bufferCount` is `0`
- * - `pBufferGroup->pBuffers` is `NULL`
- * - `pBufferGroup->sharedMemory.uniqueMemoryCount` is `0`
- * - `pBufferGroup->sharedMemory.pUniqueMemories` is `NULL`
- * - `pBufferGroup->sharedMemory.memoryViewCount` is `0`
- * - `pBufferGroup->sharedMemory.pMemoryViews` is `NULL`
+ * - `pBufferGroup` is nullified
+ *
+ * @note
+ * Does nothing if `pBufferGroup` is `NULL`.
  */
 void vkxDestroyBufferGroup(
             VkDevice device,
@@ -243,14 +249,23 @@ void vkxDestroyBufferGroup(
  * @param[in] dstBuffer
  * Destination buffer.
  *
- * @param[in] bufferCopyRegionCount
- * Buffer copy region count.
+ * @param[in] regionCount
+ * Region count.
  *
- * @param[in] pBufferCopyRegions
- * Buffer copy regions.
+ * @param[in] pRegions
+ * Regions.
  *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
+ *
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
+ * - `srcBuffer` supports `VK_BUFFER_USAGE_TRANSFER_SRC_BIT`
+ * - `dstBuffer` supports `VK_BUFFER_USAGE_TRANSFER_DST_BIT`
+ * - `pRegions` points to `regionCount` values
+ * - `pRegions` is `NULL` only if `regionCount` is `0`, in which case
+ * the implementation immediately returns `VK_SUCCESS`
  */
 VkResult vkxCopyBuffer(
             VkDevice device,
@@ -258,14 +273,14 @@ VkResult vkxCopyBuffer(
             VkCommandPool commandPool,
             VkBuffer srcBuffer,
             VkBuffer dstBuffer,
-            uint32_t bufferCopyRegionCount,
-            const VkBufferCopy* pBufferCopyRegions,
+            uint32_t regionCount,
+            const VkBufferCopy* pRegions,
             const VkAllocationCallbacks* pAllocator);
 
 /**
- * @brief Buffer region.
+ * @brief Buffer data access.
  */
-typedef struct VkxBufferRegion_
+typedef struct VkxBufferDataAccess_
 {
     /**
      * @brief Offset in bytes.
@@ -277,7 +292,7 @@ typedef struct VkxBufferRegion_
      */
     VkDeviceSize size;
 }
-VkxBufferRegion;
+VkxBufferDataAccess;
 
 /**
  * @brief Get buffer data via temporary staging buffer.
@@ -297,8 +312,8 @@ VkxBufferRegion;
  * @param[in] buffer
  * Buffer.
  *
- * @param[in] pBufferRegion
- * Buffer region.
+ * @param[in] pBufferDataAccess
+ * Buffer data access.
  *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
@@ -306,9 +321,14 @@ VkxBufferRegion;
  * @param[out] pData
  * Data.
  *
- * @note
- * Buffer must have been created to
- * support `VK_BUFFER_USAGE_TRANSFER_SRC_BIT`.
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
+ * - `buffer` supports `VK_BUFFER_USAGE_TRANSFER_SRC_BIT`
+ * - `pBufferDataAccess` is non-`NULL`
+ * - `pData` points to `pBufferDataAccess->size` bytes
+ * - `pData` is `NULL` only if `pBufferDataAccess->size` is `0`, in which case 
+ * the implementation immediately returns `VK_SUCCESS`
  */
 VkResult vkxGetBufferData(
             VkPhysicalDevice physicalDevice,
@@ -316,7 +336,7 @@ VkResult vkxGetBufferData(
             VkQueue queue,
             VkCommandPool commandPool,
             VkBuffer buffer,
-            const VkxBufferRegion* pBufferRegion,
+            const VkxBufferDataAccess* pBufferDataAccess,
             const VkAllocationCallbacks* pAllocator,
             void* pData)
                 __attribute__((nonnull(6)));
@@ -339,8 +359,8 @@ VkResult vkxGetBufferData(
  * @param[in] buffer
  * Buffer.
  *
- * @param[in] pBufferRegion
- * Buffer region.
+ * @param[in] pBufferDataAccess
+ * Buffer data access.
  *
  * @param[in] pData
  * Data.
@@ -348,9 +368,14 @@ VkResult vkxGetBufferData(
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
- * @note
- * Buffer must have been created to
- * support `VK_BUFFER_USAGE_TRANSFER_DST_BIT`.
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
+ * - `buffer` supports `VK_BUFFER_USAGE_TRANSFER_DST_BIT`
+ * - `pBufferDataAccess` is non-`NULL`
+ * - `pData` points to `pBufferDataAccess->size` bytes
+ * - `pData` is `NULL` only if `pBufferDataAccess->size` is `0`, in which case 
+ * the implementation immediately returns `VK_SUCCESS`
  */
 VkResult vkxSetBufferData(
             VkPhysicalDevice physicalDevice,
@@ -358,7 +383,7 @@ VkResult vkxSetBufferData(
             VkQueue queue,
             VkCommandPool commandPool,
             VkBuffer buffer,
-            const VkxBufferRegion* pBufferRegion,
+            const VkxBufferDataAccess* pBufferDataAccess,
             const void* pData,
             const VkAllocationCallbacks* pAllocator)
                 __attribute__((nonnull(6)));

@@ -287,16 +287,16 @@ VkResult vkxCopyBuffer(
             VkCommandPool commandPool,
             VkBuffer srcBuffer,
             VkBuffer dstBuffer,
-            uint32_t bufferCopyRegionCount,
-            const VkBufferCopy* pBufferCopyRegions,
+            uint32_t regionCount,
+            const VkBufferCopy* pRegions,
             const VkAllocationCallbacks* pAllocator)
 {
     if (srcBuffer == dstBuffer ||
-        bufferCopyRegionCount == 0) {
+        regionCount == 0) {
         return VK_SUCCESS;
     }
     // Sanity check.
-    assert(pBufferCopyRegions);
+    assert(pRegions);
 
     // Command buffer allocate info.
     VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
@@ -336,27 +336,16 @@ VkResult vkxCopyBuffer(
             commandBuffer, 
             srcBuffer, 
             dstBuffer,
-            bufferCopyRegionCount, 
-            pBufferCopyRegions);
+            regionCount, 
+            pRegions);
 
-    // End command buffer.
-    vkEndCommandBuffer(commandBuffer);
-
-    // Flush command buffer.
-    VkResult result = 
-        vkxFlushCommandBuffers(
-                device, 
-                queue, 
+    // End, flush, and free command buffers.
+    return vkxEndFlushAndFreeCommandBuffers(
+                device,
+                queue,
+                commandPool,
                 1, &commandBuffer,
                 pAllocator);
-
-    // Free command buffer.
-    vkFreeCommandBuffers(
-            device, 
-            commandPool,
-            1, &commandBuffer);
-
-    return result;
 }
 
 // Get buffer data.
@@ -366,13 +355,13 @@ VkResult vkxGetBufferData(
             VkQueue queue,
             VkCommandPool commandPool,
             VkBuffer buffer,
-            const VkxBufferRegion* pBufferRegion,
+            const VkxBufferDataAccess* pBufferDataAccess,
             const VkAllocationCallbacks* pAllocator,
             void* pData)
 {
-    assert(pBufferRegion);
-    assert(pData || pBufferRegion->size == 0);
-    if (pBufferRegion->size == 0) {
+    assert(pBufferDataAccess);
+    assert(pData || pBufferDataAccess->size == 0);
+    if (pBufferDataAccess->size == 0) {
         return VK_SUCCESS;
     }
 
@@ -383,7 +372,7 @@ VkResult vkxGetBufferData(
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
             .pNext = NULL,
             .flags = 0,
-            .size = pBufferRegion->size,
+            .size = pBufferDataAccess->size,
             .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT,
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             .queueFamilyIndexCount = 0,
@@ -407,10 +396,10 @@ VkResult vkxGetBufferData(
 
     {
         // Buffer copy region.
-        VkBufferCopy bufferCopyRegion = {
-            .srcOffset = pBufferRegion->offset,
+        VkBufferCopy region = {
+            .srcOffset = pBufferDataAccess->offset,
             .dstOffset = 0,
-            .size = pBufferRegion->size
+            .size = pBufferDataAccess->size
         };
         // Copy.
         VkResult result = 
@@ -420,7 +409,7 @@ VkResult vkxGetBufferData(
                     commandPool,
                     buffer,
                     stagingBuffer.buffer,
-                    1, &bufferCopyRegion,
+                    1, &region,
                     pAllocator);
         // Copy error?
         if (VKX_IS_ERROR(result)) {
@@ -436,12 +425,12 @@ VkResult vkxGetBufferData(
         vkMapMemory(
                 device,
                 stagingBuffer.memory,
-                0, pBufferRegion->size,
+                0, pBufferDataAccess->size,
                 0, &pStagingBufferData);
     // Map staging buffer data ok?
     if (VKX_IS_OK(result)) {
         // Read staging buffer data.
-        memcpy(pData, pStagingBufferData, pBufferRegion->size);
+        memcpy(pData, pStagingBufferData, pBufferDataAccess->size);
         // Unmap staging buffer data.
         vkUnmapMemory(device, stagingBuffer.memory);
     }
@@ -459,16 +448,17 @@ VkResult vkxSetBufferData(
             VkQueue queue,
             VkCommandPool commandPool,
             VkBuffer buffer,
-            const VkxBufferRegion* pBufferRegion, 
+            const VkxBufferDataAccess* pBufferDataAccess, 
             const void* pData, 
             const VkAllocationCallbacks* pAllocator)
 {
-    assert(pBufferRegion);
-    assert(pData || pBufferRegion->size == 0);
-    if (pBufferRegion->size == 0) {
+    assert(pBufferDataAccess);
+    assert(pData || pBufferDataAccess->size == 0);
+    if (pBufferDataAccess->size == 0) {
         return VK_SUCCESS;
     }
 
+    // Staging buffer.
     VkxBuffer stagingBuffer;
     {
         // Staging buffer create info.
@@ -476,21 +466,26 @@ VkResult vkxSetBufferData(
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
             .pNext = NULL,
             .flags = 0,
-            .size = pBufferRegion->size,
+            .size = pBufferDataAccess->size,
             .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             .queueFamilyIndexCount = 0,
             .pQueueFamilyIndices = NULL
         };
         // Create staging buffer.
-        vkxCreateBuffer(
-                physicalDevice,
-                device,
-                &bufferCreateInfo,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                pAllocator,
-                &stagingBuffer);
+        VkResult result = 
+            vkxCreateBuffer(
+                    physicalDevice,
+                    device,
+                    &bufferCreateInfo,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    pAllocator,
+                    &stagingBuffer);
+        // Create staging buffer error?
+        if (VKX_IS_ERROR(result)) {
+            return result;
+        }
     }
 
     {
@@ -500,7 +495,7 @@ VkResult vkxSetBufferData(
             vkMapMemory(
                     device,
                     stagingBuffer.memory,
-                    0, pBufferRegion->size,
+                    0, pBufferDataAccess->size,
                     0, &pStagingBufferData);
         // Map staging buffer data error?
         if (VKX_IS_ERROR(result)) {
@@ -510,17 +505,17 @@ VkResult vkxSetBufferData(
         }
 
         // Write staging buffer data.
-        memcpy(pStagingBufferData, pData, pBufferRegion->size);
+        memcpy(pStagingBufferData, pData, pBufferDataAccess->size);
 
         // Unmap staging buffer data.
         vkUnmapMemory(device, stagingBuffer.memory);
     }
 
     // Copy.
-    VkBufferCopy bufferCopyRegion = {
+    VkBufferCopy region = {
         .srcOffset = 0,
-        .dstOffset = pBufferRegion->offset,
-        .size = pBufferRegion->size
+        .dstOffset = pBufferDataAccess->offset,
+        .size = pBufferDataAccess->size
     };
     VkResult result = 
         vkxCopyBuffer(
@@ -529,7 +524,7 @@ VkResult vkxSetBufferData(
                 commandPool,
                 stagingBuffer.buffer,
                 buffer,
-                1, &bufferCopyRegion,
+                1, &region,
                 pAllocator);
 
     // Destroy staging buffer.
