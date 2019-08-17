@@ -85,8 +85,11 @@ VkxImage;
  * - `physicalDevice` is valid
  * - `device` is valid
  * - `pImageCreateInfo` is non-`NULL`
- * - `pImage` is non-`NULL`
- * - `pImage` is uninitialized
+ * - `pImage` is non-`NULL` and uninitialized
+ *
+ * @post
+ * - if result indicates success, `pImage` is properly initialized
+ * - if result indicates failure, `pImage` is nullified
  */
 VkResult vkxCreateImage(
             VkPhysicalDevice physicalDevice,
@@ -109,18 +112,16 @@ VkResult vkxCreateImage(
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
- * @note
- * If `pImage` is `NULL`, does nothing.
- *
  * @pre
- * If `pImage` is non-`NULL` with non-`NULL` members,
- * - `pImage` must have been initialized by `vkxCreateImage`
- * - `device` must have been passed to `vkxCreateImage`
+ * - `device` was used to create `pImage`
+ * - `pAllocator` was used to create `pImage`
+ * - `pImage` was previously created by `vkxCreateImage`
  *
  * @post
- * If `pImage` is non-`NULL`,
- * - `pImage->image` is `VK_NULL_HANDLE`
- * - `pImage->memory` is `VK_NULL_HANDLE`
+ * - `pImage` is nullified
+ *
+ * @note
+ * Does nothing if `pImage` is `NULL`.
  */
 void vkxDestroyImage(
             VkDevice device, 
@@ -165,7 +166,7 @@ VkxImageGroup;
  * Image create infos.
  *
  * @param[in] pMemoryPropertyFlags
- * Memory property flags per image.
+ * Memory property flags.
  *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
@@ -176,10 +177,20 @@ VkxImageGroup;
  * @pre
  * - `physicalDevice` is valid
  * - `device` is valid
- * - `pImageCreateInfos` points to `imageCount` elements
- * - `pMemoryPropertyFlags` points to `imageCount` elements
- * - `pImageGroup` is non-`NULL`
- * - `pImageGroup` is uninitialized
+ * - `pImageCreateInfos` points to `imageCount` values
+ * - `pMemoryPropertyFlags` points to `imageCount` values
+ * - `pImageGroup` is non-`NULL` and uninitialized
+ *
+ * @post
+ * - if result indicates success, `pImageGroup` is properly initialized
+ * - if result indicates failure, `pImageGroup` is nullified
+ *
+ * @note
+ * If `imageCount` is `0`
+ * - `pImageCreateInfos` may be `NULL`
+ * - `pMemoryPropertyFlags` may be `NULL`
+ * - `pImageGroup` is nullified
+ * - result is `VK_SUCCESS` 
  */
 VkResult vkxCreateImageGroup(
             VkPhysicalDevice physicalDevice,
@@ -203,22 +214,16 @@ VkResult vkxCreateImageGroup(
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
- * @note
- * If `pImageGroup` is `NULL`, does nothing.
- *
  * @pre
- * If `pImageGroup` is non-`NULL` with non-`NULL` members,
- * - `pImageGroup` must have been initialized by `vkxCreateImageGroup`
- * - `device` must have been passed to `vkxCreateImageGroup`
+ * - `device` was used to create `pImageGroup`
+ * - `pAllocator` was used to create `pImageGroup`
+ * - `pImageGroup` was previously created by `vkxCreateImageGroup`
  *
  * @post
- * If `pImageGroup` is non-`NULL`,
- * - `pImageGroup->imageCount` is `0`
- * - `pImageGroup->pImages` is `NULL`
- * - `pImageGroup->sharedMemory.uniqueMemoryCount` is `0`
- * - `pImageGroup->sharedMemory.pUniqueMemories` is `NULL`
- * - `pImageGroup->sharedMemory.memoryViewCount` is `0`
- * - `pImageGroup->sharedMemory.pMemoryViews` is `NULL`
+ * - `pImageGroup` is nullified
+ *
+ * @note
+ * Does nothing if `pImageGroup` is `NULL`.
  */
 void vkxDestroyImageGroup(
             VkDevice device,
@@ -226,7 +231,7 @@ void vkxDestroyImageGroup(
             const VkAllocationCallbacks* pAllocator);
 
 /**
- * @brief Transition image layout.
+ * @brief Transition image layout command.
  *
  * @param[in] commandBuffer
  * Command buffer.
@@ -248,6 +253,11 @@ void vkxDestroyImageGroup(
  *
  * @param[in] dstStageMask
  * Stage mask.
+ *
+ * @pre
+ * - `commandBuffer` is valid 
+ * - `commandBuffer` is in the recording state
+ * - `image` is valid
  */
 VkResult vkxCmdTransitionImageLayout(
             VkCommandBuffer commandBuffer,
@@ -258,26 +268,162 @@ VkResult vkxCmdTransitionImageLayout(
             VkPipelineStageFlags srcStageMask,
             VkPipelineStageFlags dstStageMask);
 
-#if 0
 /**
- * @brief Image data access info.
+ * @brief Transition image layout.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] queue
+ * Queue.
+ *
+ * @param[in] commandPool
+ * Command pool.
+ *
+ * @param[in] image
+ * Image.
+ *
+ * @param[in] oldLayout
+ * Old layout.
+ *
+ * @param[in] newLayout
+ * New layout.
+ *
+ * @param[in] subresourceRange
+ * Subresource range.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
  */
-typedef struct VkxImageDataAccessInfo_
+VkResult vkxTransitionImageLayout(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkImage image,
+            VkImageLayout oldLayout,
+            VkImageLayout newLayout,
+            VkImageSubresourceRange subresourceRange,
+            const VkAllocationCallbacks* pAllocator);
+
+/**
+ * @brief Copy image to buffer.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] queue
+ * Queue.
+ *
+ * @param[in] commandPool
+ * Command pool.
+ *
+ * @param[in] srcImage
+ * Source image.
+ *
+ * @param[in] srcImageLayout
+ * Source image layout.
+ *
+ * @param[in] dstBuffer
+ * Destination buffer.
+ *
+ * @param[in] regionCount
+ * Region count.
+ *
+ * @param[in] pRegions
+ * Regions.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
+ * - `srcImage` supports `VK_IMAGE_USAGE_TRANSFER_SRC_BIT`
+ * - `srcImageLayout` is 
+ * `VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL`,
+ * `VK_IMAGE_LAYOUT_GENERAL`, or `VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR`
+ * - `dstBuffer` supports `VK_BUFFER_USAGE_TRANSFER_SRC_BIT`
+ * - `pRegions` points to `regionCount` values
+ * - `pRegions` is `NULL` only if `regionCount` is `0`, in which case
+ * the implementation immediately returns `VK_SUCCESS`
+ */
+VkResult vkxCopyImageToBuffer(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkImage srcImage,
+            VkImageLayout srcImageLayout,
+            VkBuffer dstBuffer,
+            uint32_t regionCount,
+            const VkBufferImageCopy* pRegions,
+            const VkAllocationCallbacks* pAllocator);
+
+/**
+ * @brief Copy buffer to image.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] queue
+ * Queue.
+ *
+ * @param[in] commandPool
+ * Command pool.
+ *
+ * @param[in] srcBuffer
+ * Source buffer.
+ *
+ * @param[in] dstImage
+ * Destination image.
+ *
+ * @param[in] dstImageLayout
+ * Destination image layout.
+ *
+ * @param[in] regionCount
+ * Region count.
+ *
+ * @param[in] pRegions
+ * Regions.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
+ * - `srcBuffer` supports `VK_BUFFER_USAGE_TRANSFER_SRC_BIT`
+ * - `dstImage` supports `VK_IMAGE_USAGE_TRANSFER_DST_BIT`
+ * - `dstImageLayout` is 
+ * `VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL`,
+ * `VK_IMAGE_LAYOUT_GENERAL`, or `VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR`
+ * - `pRegions` points to `regionCount` values
+ * - `pRegions` is `NULL` only if `regionCount` is `0`, in which case
+ * the implementation immediately returns `VK_SUCCESS`
+ */
+VkResult vkxCopyBufferToImage(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkBuffer srcBuffer,
+            VkImage dstImage,
+            VkImageLayout dstImageLayout,
+            uint32_t regionCount,
+            const VkBufferImageCopy* pRegions,
+            const VkAllocationCallbacks* pAllocator);
+
+/**
+ * @brief Image data access.
+ */
+typedef struct VkxImageDataAccess_
 {
     /**
-     * @brief Image.
+     * @brief Layout.
      */
-    VkImage image;
-
-    /**
-     * @brief Old layout.
-     */
-    VkImageLayout oldLayout;
-
-    /**
-     * @brief New layout.
-     */
-    VkImageLayout newLayout;
+    VkImageLayout layout;
 
     /**
      * @brief Subresource layers.
@@ -293,8 +439,13 @@ typedef struct VkxImageDataAccessInfo_
      * @brief Extent.
      */
     VkExtent3D extent;
+
+    /**
+     * @brief Size in bytes.
+     */
+    VkDeviceSize size;
 }
-VkxImageDataAccessInfo;
+VkxImageDataAccess;
 
 /**
  * @brief Get image data via temporary staging buffer.
@@ -311,32 +462,40 @@ VkxImageDataAccessInfo;
  * @param[in] commandPool
  * Command pool.
  *
+ * @param[in] image
+ * Image.
+ * 
+ * @param[in] pImageDataAccess
+ * Image data access.
+ *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
- *
- * @param[in] pAccessInfo
- * Data access info.
- *
- * @param[in] dataSize
- * Data size in bytes.
  *
  * @param[out] pData
  * Data.
  *
- * @note
- * Image must have been created to 
- * support `VK_IMAGE_USAGE_TRANSFER_SRC_BIT`.
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
+ * - `image` supports `VK_IMAGE_USAGE_TRANSFER_SRC_BIT`
+ * - `pImageDataAccess` is non-`NULL`
+ * - `pImageDataAccess->layout` is
+ * `VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL`,
+ * `VK_IMAGE_LAYOUT_GENERAL`, or `VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR`
+ * - `pData` points to `pImageDataAccess->size` bytes
+ * - `pData` is `NULL` only if `pImageDataAccess->size` is `0`, in which case
+ * the implementation immediately returns `VK_SUCCESS`
  */
 VkResult vkxGetImageData(
             VkPhysicalDevice physicalDevice,
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
+            VkImage image,
+            const VkxImageDataAccess* pImageDataAccess,
             const VkAllocationCallbacks* pAllocator,
-            const VkxImageDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
             void* pData)
-                __attribute__((nonnull(5)));
+                __attribute__((nonnull(6)));
 
 /**
  * @brief Set image data via temporary staging buffer.
@@ -353,33 +512,40 @@ VkResult vkxGetImageData(
  * @param[in] commandPool
  * Command pool.
  *
- * @param[in] pAllocator
- * _Optional_. Allocation callbacks.
+ * @param[in] image
+ * Image.
  * 
- * @param[in] pAccessInfo
- * Data access info.
- *
- * @param[in] dataSize
- * Data size in bytes.
+ * @param[in] pImageDataAccess
+ * Image data access.
  *
  * @param[in] pData
  * Data.
  *
- * @note
- * Image must have been created to 
- * support `VK_IMAGE_USAGE_TRANSFER_DST_BIT`.
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @pre
+ * - all Vulkan handles are valid
+ * - `queue` is compatible with `commandPool`
+ * - `image` supports `VK_IMAGE_USAGE_TRANSFER_DST_BIT`
+ * - `pImageDataAccess` is non-`NULL`
+ * - `pImageDataAccess->layout` is
+ * `VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL`,
+ * `VK_IMAGE_LAYOUT_GENERAL`, or `VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR`
+ * - `pData` points to `pImageDataAccess->size` bytes
+ * - `pData` is `NULL` only if `pImageDataAccess->size` is `0`, in which case 
+ * the implementation immediately returns `VK_SUCCESS`
  */
 VkResult vkxSetImageData(
             VkPhysicalDevice physicalDevice,
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
-            const VkAllocationCallbacks* pAllocator,
-            const VkxImageDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
-            const void* pData)
-                __attribute__((nonnull(5)));
-#endif
+            VkImage image,
+            const VkxImageDataAccess* pImageDataAccess,
+            const void* pData,
+            const VkAllocationCallbacks* pAllocator)
+                __attribute__((nonnull(6)));
 
 /**@}*/
 

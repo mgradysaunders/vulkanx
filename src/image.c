@@ -299,8 +299,8 @@ VkResult vkxCmdTransitionImageLayout(
         .dstAccessMask = 0, // Uninitialized.
         .oldLayout = oldLayout,
         .newLayout = newLayout,
-        .srcQueueFamilyIndex = 0,
-        .dstQueueFamilyIndex = 0,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .image = image,
         .subresourceRange = subresourceRange
     };
@@ -400,282 +400,426 @@ VkResult vkxCmdTransitionImageLayout(
     return VK_SUCCESS;
 }
 
-#if 0
-// Get image data.
-void vkxGetImageData(
-            VkPhysicalDevice physicalDevice,
+// Transition image layout.
+VkResult vkxTransitionImageLayout(
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
-            const VkxImageDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
-            void* pData)
+            VkImage image,
+            VkImageLayout oldLayout,
+            VkImageLayout newLayout,
+            VkImageSubresourceRange subresourceRange,
+            const VkAllocationCallbacks* pAllocator)
 {
-    assert(pAccessInfo);
-    assert(pData || dataSize == 0);
-    if (dataSize == 0) {
-        return;
-    }
-
-    // Create staging buffer.
-    VkxBuffer dstBuffer;
-    VkBufferCreateInfo dstBufferCreateInfo = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = NULL,
-        .flags = (VkBufferCreateFlags)0,
-        .size = dataSize,
-        .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 0,
-        .pQueueFamilyIndices = NULL
-    };
-    vkxCreateBuffer(
-            physicalDevice,
-            device,
-            &dstBufferCreateInfo,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &dstBuffer);
-
-    // Allocate command buffer.
-    VkCommandBuffer commandBuffer;
+    // Command buffer allocate info.
     VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = NULL,
-        .commandPool = commandPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandPool = commandPool,
         .commandBufferCount = 1
     };
-    (void)
-    VKX_VERIFIED_CALL(
-        vkAllocateCommandBuffers,
-                device,
-                &commandBufferAllocateInfo,
-                &commandBuffer);
 
-    // Begin command buffer.
+    // Command buffer begin info.
     VkCommandBufferBeginInfo commandBufferBeginInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext = NULL,
         .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
         .pInheritanceInfo = NULL
     };
-    (void)
-    VKX_VERIFIED_CALL(
-        vkBeginCommandBuffer,
+
+    // Command buffer.
+    VkCommandBuffer commandBuffer;
+    {
+        // Allocate and begin command buffer.
+        VkResult result = 
+            vkxAllocateAndBeginCommandBuffers(
+                    device,
+                    &commandBufferAllocateInfo,
+                    &commandBufferBeginInfo,
+                    &commandBuffer);
+        // Allocate and begin command buffer error?
+        if (VKX_IS_ERROR(result)) {
+            return result;
+        }
+    }
+
+    // Transition image layout.
+    VkResult result =
+        vkxCmdTransitionImageLayout(
                 commandBuffer,
-                &commandBufferBeginInfo);
+                image,
+                oldLayout,
+                newLayout,
+                subresourceRange,
+                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+                VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
-    // Subresource range corresponding to subresource layers.
-    VkImageSubresourceRange subresourceRange = {
-        .aspectMask = pAccessInfo->subresourceLayers.aspectMask,
-        .baseMipLevel = pAccessInfo->subresourceLayers.mipLevel,
-        .baseArrayLayer = pAccessInfo->subresourceLayers.baseArrayLayer,
-        .levelCount = 1,
-        .layerCount = pAccessInfo->subresourceLayers.layerCount
+    // Transition image layout error?
+    if (VKX_IS_ERROR(result)) {
+        // End command buffer.
+        vkEndCommandBuffer(commandBuffer);
+        // Free command buffer.
+        vkFreeCommandBuffers(
+                device,
+                commandPool,
+                1, &commandBuffer);
+        return result;
+    }
+
+
+    // End, flush, and free command buffer.
+    return vkxEndFlushAndFreeCommandBuffers(
+                device,
+                queue,
+                commandPool,
+                1, &commandBuffer,
+                pAllocator);
+}
+
+// Copy image to buffer.
+VkResult vkxCopyImageToBuffer(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkImage srcImage,
+            VkImageLayout srcImageLayout,
+            VkBuffer dstBuffer,
+            uint32_t regionCount,
+            const VkBufferImageCopy* pRegions,
+            const VkAllocationCallbacks* pAllocator)
+{
+    assert(
+        srcImageLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL ||
+        srcImageLayout == VK_IMAGE_LAYOUT_GENERAL ||
+        srcImageLayout == VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR);
+    if (regionCount == 0) {
+        return VK_SUCCESS;
+    }
+
+    // Sanity check.
+    assert(pRegions);
+
+    // Command buffer allocate info.
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = NULL,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandPool = commandPool,
+        .commandBufferCount = 1
     };
 
-    // Transition from oldLayout to TRANSFER_SRC_OPTIMAL.
-    vkxCmdTransitionImageLayout(
-            commandBuffer,
-            pAccessInfo->image,
-            pAccessInfo->oldLayout,
-            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            subresourceRange,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
-
-    // Buffer image copy.
-    VkBufferImageCopy bufferImageCopy = {
-        .bufferOffset = 0,
-        .bufferRowLength = 0,
-        .bufferImageHeight = 0,
-        .imageSubresource = pAccessInfo->subresourceLayers,
-        .imageOffset = pAccessInfo->offset,
-        .imageExtent = pAccessInfo->extent
+    // Command buffer begin info.
+    VkCommandBufferBeginInfo commandBufferBeginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = NULL
     };
+
+    // Command buffer.
+    VkCommandBuffer commandBuffer;
+    {
+        // Allocate and begin command buffer.
+        VkResult result = 
+            vkxAllocateAndBeginCommandBuffers(
+                    device,
+                    &commandBufferAllocateInfo,
+                    &commandBufferBeginInfo,
+                    &commandBuffer);
+        // Allocate and begin command buffer error?
+        if (VKX_IS_ERROR(result)) {
+            return result;
+        }
+    }
+
+    // Copy image to buffer.
     vkCmdCopyImageToBuffer(
             commandBuffer,
-            pAccessInfo->image,
-            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            dstBuffer.buffer,
-            1, &bufferImageCopy);
+            srcImage,
+            srcImageLayout,
+            dstBuffer,
+            regionCount,
+            pRegions);
 
-    // Transition from TRANSFER_SRC_OPTIMAL to newLayout.
-    vkxCmdTransitionImageLayout(
-            commandBuffer,
-            pAccessInfo->image,
-            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-            pAccessInfo->newLayout,
-            subresourceRange,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
-
-    // End command buffer.
-    vkEndCommandBuffer(commandBuffer);
-
-    // Flush command buffer.
-    vkxFlushCommandBuffers(device, queue, 1, &commandBuffer);
-
-    // Free command buffer.
-    vkFreeCommandBuffers(
-            device,
-            commandPool,
-            1, &commandBuffer);
-
-    // Read from staging buffer.
-    void* pMappedMemory = NULL;
-    (void)
-    VKX_VERIFIED_CALL(
-        vkMapMemory,
+    // End, flush, and free command buffer.
+    return vkxEndFlushAndFreeCommandBuffers(
                 device,
-                dstBuffer.memory,
-                (VkDeviceSize)0, dataSize,
-                (VkMemoryMapFlags)0, 
-                &pMappedMemory);
-    memcpy(pData, pMappedMemory, dataSize);
-    vkUnmapMemory(device, dstBuffer.memory);
+                queue,
+                commandPool,
+                1, &commandBuffer,
+                pAllocator);
+}
+
+// Copy buffer to image.
+VkResult vkxCopyBufferToImage(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkBuffer srcBuffer,
+            VkImage dstImage,
+            VkImageLayout dstImageLayout,
+            uint32_t regionCount,
+            const VkBufferImageCopy* pRegions,
+            const VkAllocationCallbacks* pAllocator)
+{
+    assert(
+        dstImageLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL ||
+        dstImageLayout == VK_IMAGE_LAYOUT_GENERAL ||
+        dstImageLayout == VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR);
+    if (regionCount == 0) {
+        return VK_SUCCESS;
+    }
+
+    // Sanity check.
+    assert(pRegions);
+
+    // Command buffer allocate info.
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = NULL,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandPool = commandPool,
+        .commandBufferCount = 1
+    };
+
+    // Command buffer begin info.
+    VkCommandBufferBeginInfo commandBufferBeginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = NULL
+    };
+
+    // Command buffer.
+    VkCommandBuffer commandBuffer;
+    {
+        // Allocate and begin command buffer.
+        VkResult result = 
+            vkxAllocateAndBeginCommandBuffers(
+                    device,
+                    &commandBufferAllocateInfo,
+                    &commandBufferBeginInfo,
+                    &commandBuffer);
+        // Allocate and begin command buffer error?
+        if (VKX_IS_ERROR(result)) {
+            return result;
+        }
+    }
+
+    // Copy buffer to image.
+    vkCmdCopyBufferToImage(
+            commandBuffer,
+            srcBuffer,
+            dstImage,
+            dstImageLayout,
+            regionCount,
+            pRegions);
+
+    // End, flush, and free command buffer.
+    return vkxEndFlushAndFreeCommandBuffers(
+                device,
+                queue,
+                commandPool,
+                1, &commandBuffer,
+                pAllocator);
+}
+
+// Get image data.
+VkResult vkxGetImageData(
+            VkPhysicalDevice physicalDevice,
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            VkImage image,
+            const VkxImageDataAccess* pImageDataAccess,
+            const VkAllocationCallbacks* pAllocator,
+            void* pData)
+{
+    assert(pImageDataAccess);
+    assert(
+        pImageDataAccess->layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL ||
+        pImageDataAccess->layout == VK_IMAGE_LAYOUT_GENERAL ||
+        pImageDataAccess->layout == VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR);
+    assert(pData || pImageDataAccess->size == 0);
+    if (pImageDataAccess->size == 0) {
+        return VK_SUCCESS;
+    }
+
+    // Staging buffer.
+    VkxBuffer stagingBuffer;
+    {
+        // Staging buffer create info.
+        VkBufferCreateInfo bufferCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .size = pImageDataAccess->size,
+            .usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = NULL
+        };
+        // Create staging buffer.
+        VkResult result = 
+            vkxCreateBuffer(
+                    physicalDevice,
+                    device,
+                    &bufferCreateInfo,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    pAllocator,
+                    &stagingBuffer);
+        // Create staging buffer error?
+        if (VKX_IS_ERROR(result)) {
+            return result;
+        }
+    }
+
+    {
+        // Copy image to buffer.
+        VkBufferImageCopy region = {
+            .bufferOffset = 0,
+            .bufferRowLength = 0,
+            .bufferImageHeight = 0,
+            .imageSubresource = pImageDataAccess->subresourceLayers,
+            .imageOffset = pImageDataAccess->offset,
+            .imageExtent = pImageDataAccess->extent
+        };
+        VkResult result = 
+            vkxCopyImageToBuffer(
+                    device,
+                    queue,
+                    commandPool,
+                    image, pImageDataAccess->layout,
+                    stagingBuffer.buffer,
+                    1, &region,
+                    pAllocator);
+        // Copy image to buffer error?
+        if (VKX_IS_ERROR(result)) {
+            // Destroy staging buffer.
+            vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
+            return result;
+        }
+    }
+
+    // Map staging buffer data.
+    void* pStagingBufferData = NULL;
+    VkResult result = 
+        vkMapMemory(
+                device,
+                stagingBuffer.memory,
+                0, pImageDataAccess->size,
+                0, &pStagingBufferData);
+    // Map staging buffer data ok?
+    if (VKX_IS_OK(result)) {
+        // Read staging buffer data.
+        memcpy(pData, pStagingBufferData, pImageDataAccess->size);
+        // Unmap staging buffer data.
+        vkUnmapMemory(device, stagingBuffer.memory);
+    }
 
     // Destroy staging buffer.
-    vkxDestroyBuffer(device, &dstBuffer);
+    vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
+
+    return result;
 }
 
 // Set image data.
-void vkxSetImageData(
+VkResult vkxSetImageData(
             VkPhysicalDevice physicalDevice,
             VkDevice device,
             VkQueue queue,
             VkCommandPool commandPool,
-            const VkxImageDataAccessInfo* pAccessInfo,
-            VkDeviceSize dataSize,
-            const void* pData)
+            VkImage image,
+            const VkxImageDataAccess* pImageDataAccess,
+            const void* pData,
+            const VkAllocationCallbacks* pAllocator)
 {
-    assert(pAccessInfo);
-    assert(pData || dataSize == 0);
-    if (dataSize == 0) {
-        return;
+    assert(pImageDataAccess);
+    assert(
+        pImageDataAccess->layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL ||
+        pImageDataAccess->layout == VK_IMAGE_LAYOUT_GENERAL ||
+        pImageDataAccess->layout == VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR);
+    assert(pData || pImageDataAccess->size == 0);
+    if (pImageDataAccess->size == 0) {
+        return VK_SUCCESS;
     }
 
-    // Create staging buffer.
-    VkxBuffer srcBuffer;
-    VkBufferCreateInfo srcBufferCreateInfo = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .pNext = NULL,
-        .flags = (VkBufferCreateFlags)0,
-        .size = dataSize,
-        .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 0,
-        .pQueueFamilyIndices = NULL
-    };
-    vkxCreateBuffer(
-            physicalDevice,
-            device,
-            &srcBufferCreateInfo,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &srcBuffer);
+    // Staging buffer.
+    VkxBuffer stagingBuffer;
+    {
+        // Staging buffer create info.
+        VkBufferCreateInfo bufferCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .size = pImageDataAccess->size,
+            .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = NULL
+        };
+        // Create staging buffer.
+        VkResult result = 
+            vkxCreateBuffer(
+                    physicalDevice,
+                    device,
+                    &bufferCreateInfo,
+                    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                    pAllocator,
+                    &stagingBuffer);
+        // Create staging buffer error?
+        if (VKX_IS_ERROR(result)) {
+            return result;
+        }
+    }
 
-    // Write to staging buffer.
-    void* pMappedMemory = NULL;
-    (void)
-    VKX_VERIFIED_CALL(
-        vkMapMemory,
-                device,
-                srcBuffer.memory,
-                (VkDeviceSize)0, dataSize,
-                (VkMemoryMapFlags)0, 
-                &pMappedMemory);
-    memcpy(pMappedMemory, pData, dataSize);
-    vkUnmapMemory(device, srcBuffer.memory);
+    {
+        // Map staging buffer data.
+        void* pStagingBufferData = NULL;
+        VkResult result = 
+            vkMapMemory(
+                    device,
+                    stagingBuffer.memory,
+                    0, pImageDataAccess->size,
+                    0, &pStagingBufferData);
+        // Map staging buffer data error?
+        if (VKX_IS_ERROR(result)) {
+            // Destroy staging buffer.
+            vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
+            return result;
+        }
 
-    // Allocate command buffer.
-    VkCommandBuffer commandBuffer;
-    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .pNext = NULL,
-        .commandPool = commandPool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
-    };
-    (void)
-    VKX_VERIFIED_CALL(
-        vkAllocateCommandBuffers,
-                device,
-                &commandBufferAllocateInfo,
-                &commandBuffer);
+        // Write staging buffer data.
+        memcpy(pStagingBufferData, pData, pImageDataAccess->size);
 
-    // Begin command buffer.
-    VkCommandBufferBeginInfo commandBufferBeginInfo = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = NULL,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = NULL
-    };
-    (void)
-    VKX_VERIFIED_CALL(
-        vkBeginCommandBuffer,
-                commandBuffer,
-                &commandBufferBeginInfo);
+        // Unmap staging buffer data.
+        vkUnmapMemory(device, stagingBuffer.memory);
+    }
 
-    // Subresource range corresponding to subresource layers.
-    VkImageSubresourceRange subresourceRange = {
-        .aspectMask = pAccessInfo->subresourceLayers.aspectMask,
-        .baseMipLevel = pAccessInfo->subresourceLayers.mipLevel,
-        .baseArrayLayer = pAccessInfo->subresourceLayers.baseArrayLayer,
-        .levelCount = 1,
-        .layerCount = pAccessInfo->subresourceLayers.layerCount
-    };
-
-    // Transition from oldLayout to TRANSFER_DST_OPTIMAL.
-    vkxCmdTransitionImageLayout(
-            commandBuffer,
-            pAccessInfo->image,
-            pAccessInfo->oldLayout,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            subresourceRange,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
-
-    // Buffer image copy.
-    VkBufferImageCopy bufferImageCopy = {
+    // Copy buffer to image.
+    VkBufferImageCopy region = {
         .bufferOffset = 0,
         .bufferRowLength = 0,
         .bufferImageHeight = 0,
-        .imageSubresource = pAccessInfo->subresourceLayers,
-        .imageOffset = pAccessInfo->offset,
-        .imageExtent = pAccessInfo->extent
+        .imageSubresource = pImageDataAccess->subresourceLayers,
+        .imageOffset = pImageDataAccess->offset,
+        .imageExtent = pImageDataAccess->extent
     };
-    vkCmdCopyBufferToImage(
-            commandBuffer,
-            srcBuffer.buffer,
-            pAccessInfo->image,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1, &bufferImageCopy);
-
-    // Transition from TRANSFER_DST_OPTIMAL to newLayout.
-    vkxCmdTransitionImageLayout(
-            commandBuffer,
-            pAccessInfo->image,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            pAccessInfo->newLayout,
-            subresourceRange,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-            VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
-
-    // End command buffer.
-    vkEndCommandBuffer(commandBuffer);
-
-    // Flush command buffer.
-    vkxFlushCommandBuffers(device, queue, 1, &commandBuffer);
-
-    // Free command buffer.
-    vkFreeCommandBuffers(
-            device,
-            commandPool,
-            1, &commandBuffer);
+    VkResult result = 
+        vkxCopyBufferToImage(
+                device,
+                queue,
+                commandPool,
+                stagingBuffer.buffer,
+                image, pImageDataAccess->layout,
+                1, &region,
+                pAllocator);
 
     // Destroy staging buffer.
-    vkxDestroyBuffer(device, &srcBuffer);
+    vkxDestroyBuffer(device, &stagingBuffer, pAllocator);
+
+    return result;
 }
-#endif
