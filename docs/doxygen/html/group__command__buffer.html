@@ -79,6 +79,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gae990fa15b6918a61f26e9369c46b196e"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__command__buffer.html#gae990fa15b6918a61f26e9369c46b196e">vkxFlushCommandBuffers</a> (VkDevice device, VkQueue queue, uint32_t commandBufferCount, const VkCommandBuffer *pCommandBuffers, const VkAllocationCallbacks *pAllocator)</td></tr>
 <tr class="memdesc:gae990fa15b6918a61f26e9369c46b196e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flush command buffers.  <a href="#gae990fa15b6918a61f26e9369c46b196e">More...</a><br /></td></tr>
 <tr class="separator:gae990fa15b6918a61f26e9369c46b196e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga529beb854247fc792b04604f7e42690e"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__command__buffer.html#ga529beb854247fc792b04604f7e42690e">vkxEndFlushAndFreeCommandBuffers</a> (VkDevice device, VkQueue queue, VkCommandPool commandPool, uint32_t commandBufferCount, const VkCommandBuffer *pCommandBuffers, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:ga529beb854247fc792b04604f7e42690e"><td class="mdescLeft">&#160;</td><td class="mdescRight">End, flush, and free command buffers.  <a href="#ga529beb854247fc792b04604f7e42690e">More...</a><br /></td></tr>
+<tr class="separator:ga529beb854247fc792b04604f7e42690e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p><code>&lt;vulkanx/command_buffer.h&gt;</code> </p>
@@ -183,6 +186,71 @@ Functions</h2></td></tr>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandBufferCount</td><td>Command buffer count.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pCommandBuffers</td><td>Command buffers.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga529beb854247fc792b04604f7e42690e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga529beb854247fc792b04604f7e42690e">&#9670;&nbsp;</a></span>vkxEndFlushAndFreeCommandBuffers()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxEndFlushAndFreeCommandBuffers </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>commandBufferCount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkCommandBuffer *&#160;</td>
+          <td class="paramname"><em>pCommandBuffers</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>End, flush, and free command buffers. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">commandBufferCount</td><td>Command buffer count.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pCommandBuffers</td><td>Command buffers.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks. </td></tr>

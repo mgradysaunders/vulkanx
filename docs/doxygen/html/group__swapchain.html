@@ -175,8 +175,7 @@ Functions</h2></td></tr>
 <li><code>graphicsQueueFamilyIndex</code> is valid and supports graphics commands</li>
 <li><code>presentQueueFamilyIndex</code> is valid and supports present commands</li>
 <li><code>surface</code> is valid</li>
-<li><code>pSwapchain</code> is non-<code>NULL</code></li>
-<li><code>pSwapchain</code> is uninitialized </li>
+<li><code>pSwapchain</code> is non-<code>NULL</code> and uninitialized </li>
 </ul>
 </dd></dl>
 
@@ -245,12 +244,12 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section pre"><dt>Precondition</dt><dd><ul>
-<li><code>physicalDevice</code> is valid</li>
-<li><code>device</code> is valid</li>
-<li><code>surface</code> is valid</li>
+<li><code>physicalDevice</code> was used to create <code>pSwapchain</code></li>
+<li><code>device</code> was used to create <code>pSwapchain</code></li>
+<li><code>surface</code> was used to create <code>pSwapchain</code></li>
+<li><code>pAllocator</code> was used to create <code>pSwapchain</code></li>
 <li><code>pSwapchain</code> is non-<code>NULL</code></li>
-<li><code>pSwapchain</code> must have been initialized by <code>vkxCreateSwapchain</code></li>
-<li><code>physicalDevice</code>, <code>device</code>, <code>surface</code>, and <code>pAllocator</code> must have been passed to <code>vkxCreateSwapchain</code> </li>
+<li><code>pSwapchain</code> was previously created by <code>vkxCreateSwapchain</code> </li>
 </ul>
 </dd></dl>
 
@@ -297,13 +296,14 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section pre"><dt>Precondition</dt><dd>If <code>pSwapchain</code> is non-<code>NULL</code> with non-<code>NULL</code> members,<ul>
-<li><code>pSwapchain</code> must have been initialized by <code>vkxCreateSwapchain</code></li>
-<li><code>device</code> and <code>pAllocator</code> must have been passed to <code>vkxCreateSwapchain</code></li>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li><code>device</code> was used to create <code>pSwapchain</code></li>
+<li><code>pAllocator</code> was used to create <code>pSwapchain</code></li>
+<li><code>pSwapchain</code> was previously created by <code>vkxCreateSwapchain</code></li>
 </ul>
 </dd></dl>
-<dl class="section post"><dt>Postcondition</dt><dd>If <code>pSwapchain</code> is non-<code>NULL</code>,<ul>
-<li><code>pSwapchain-&gt;(member)</code> is nullified </li>
+<dl class="section post"><dt>Postcondition</dt><dd><ul>
+<li><code>pSwapchain</code> is nullified </li>
 </ul>
 </dd></dl>
 

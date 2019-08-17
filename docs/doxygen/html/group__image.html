@@ -80,6 +80,9 @@ Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVkxImageGroup.html">VkxImageGroup</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Image group.  <a href="structVkxImageGroup.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVkxImageDataAccess.html">VkxImageDataAccess</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Image data access.  <a href="structVkxImageDataAccess.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -96,8 +99,23 @@ Functions</h2></td></tr>
 <tr class="memdesc:gaae761b4029cea802d2fd6a9a273a0432"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy image group.  <a href="#gaae761b4029cea802d2fd6a9a273a0432">More...</a><br /></td></tr>
 <tr class="separator:gaae761b4029cea802d2fd6a9a273a0432"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf27cb5ceabe37fe67a7dd5c5b557955f"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__image.html#gaf27cb5ceabe37fe67a7dd5c5b557955f">vkxCmdTransitionImageLayout</a> (VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageSubresourceRange subresourceRange, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask)</td></tr>
-<tr class="memdesc:gaf27cb5ceabe37fe67a7dd5c5b557955f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transition image layout.  <a href="#gaf27cb5ceabe37fe67a7dd5c5b557955f">More...</a><br /></td></tr>
+<tr class="memdesc:gaf27cb5ceabe37fe67a7dd5c5b557955f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transition image layout command.  <a href="#gaf27cb5ceabe37fe67a7dd5c5b557955f">More...</a><br /></td></tr>
 <tr class="separator:gaf27cb5ceabe37fe67a7dd5c5b557955f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa8d046173133a71ae1bafbecc64157af"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__image.html#gaa8d046173133a71ae1bafbecc64157af">vkxTransitionImageLayout</a> (VkDevice device, VkQueue queue, VkCommandPool commandPool, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkImageSubresourceRange subresourceRange, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:gaa8d046173133a71ae1bafbecc64157af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transition image layout.  <a href="#gaa8d046173133a71ae1bafbecc64157af">More...</a><br /></td></tr>
+<tr class="separator:gaa8d046173133a71ae1bafbecc64157af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae518897017a4953aca259522c1f695df"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__image.html#gae518897017a4953aca259522c1f695df">vkxCopyImageToBuffer</a> (VkDevice device, VkQueue queue, VkCommandPool commandPool, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy *pRegions, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:gae518897017a4953aca259522c1f695df"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy image to buffer.  <a href="#gae518897017a4953aca259522c1f695df">More...</a><br /></td></tr>
+<tr class="separator:gae518897017a4953aca259522c1f695df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gadf13afac14798cfeb4a86f3d07824010"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__image.html#gadf13afac14798cfeb4a86f3d07824010">vkxCopyBufferToImage</a> (VkDevice device, VkQueue queue, VkCommandPool commandPool, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy *pRegions, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:gadf13afac14798cfeb4a86f3d07824010"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy buffer to image.  <a href="#gadf13afac14798cfeb4a86f3d07824010">More...</a><br /></td></tr>
+<tr class="separator:gadf13afac14798cfeb4a86f3d07824010"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gace28ffb2d0801a7bd86cfa2cdf1b2bcc"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__image.html#gace28ffb2d0801a7bd86cfa2cdf1b2bcc">vkxGetImageData</a> (VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, VkCommandPool commandPool, VkImage image, const <a class="el" href="structVkxImageDataAccess.html">VkxImageDataAccess</a> *pImageDataAccess, const VkAllocationCallbacks *pAllocator, void *pData)</td></tr>
+<tr class="memdesc:gace28ffb2d0801a7bd86cfa2cdf1b2bcc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get image data via temporary staging buffer.  <a href="#gace28ffb2d0801a7bd86cfa2cdf1b2bcc">More...</a><br /></td></tr>
+<tr class="separator:gace28ffb2d0801a7bd86cfa2cdf1b2bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae66406762943bb4737bf71f4724636e3"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__image.html#gae66406762943bb4737bf71f4724636e3">vkxSetImageData</a> (VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, VkCommandPool commandPool, VkImage image, const <a class="el" href="structVkxImageDataAccess.html">VkxImageDataAccess</a> *pImageDataAccess, const void *pData, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:gae66406762943bb4737bf71f4724636e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set image data via temporary staging buffer.  <a href="#gae66406762943bb4737bf71f4724636e3">More...</a><br /></td></tr>
+<tr class="separator:gae66406762943bb4737bf71f4724636e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p><code>&lt;vulkanx/image.h&gt;</code> </p>
@@ -168,8 +186,12 @@ Functions</h2></td></tr>
 <li><code>physicalDevice</code> is valid</li>
 <li><code>device</code> is valid</li>
 <li><code>pImageCreateInfo</code> is non-<code>NULL</code></li>
-<li><code>pImage</code> is non-<code>NULL</code></li>
-<li><code>pImage</code> is uninitialized </li>
+<li><code>pImage</code> is non-<code>NULL</code> and uninitialized</li>
+</ul>
+</dd></dl>
+<dl class="section post"><dt>Postcondition</dt><dd><ul>
+<li>if result indicates success, <code>pImage</code> is properly initialized</li>
+<li>if result indicates failure, <code>pImage</code> is nullified </li>
 </ul>
 </dd></dl>
 
@@ -216,17 +238,17 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>If <code>pImage</code> is <code>NULL</code>, does nothing.</dd></dl>
-<dl class="section pre"><dt>Precondition</dt><dd>If <code>pImage</code> is non-<code>NULL</code> with non-<code>NULL</code> members,<ul>
-<li><code>pImage</code> must have been initialized by <code>vkxCreateImage</code></li>
-<li><code>device</code> must have been passed to <code>vkxCreateImage</code></li>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li><code>device</code> was used to create <code>pImage</code></li>
+<li><code>pAllocator</code> was used to create <code>pImage</code></li>
+<li><code>pImage</code> was previously created by <code>vkxCreateImage</code></li>
 </ul>
 </dd></dl>
-<dl class="section post"><dt>Postcondition</dt><dd>If <code>pImage</code> is non-<code>NULL</code>,<ul>
-<li><code>pImage-&gt;image</code> is <code>VK_NULL_HANDLE</code></li>
-<li><code>pImage-&gt;memory</code> is <code>VK_NULL_HANDLE</code> </li>
+<dl class="section post"><dt>Postcondition</dt><dd><ul>
+<li><code>pImage</code> is nullified</li>
 </ul>
 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Does nothing if <code>pImage</code> is <code>NULL</code>. </dd></dl>
 
 </div>
 </div>
@@ -293,7 +315,7 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">imageCount</td><td>Image count.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pImageCreateInfos</td><td>Image create infos.</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pMemoryPropertyFlags</td><td>Memory property flags per image.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pMemoryPropertyFlags</td><td>Memory property flags.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">pImageGroup</td><td>Image group.</td></tr>
   </table>
@@ -302,10 +324,21 @@ Functions</h2></td></tr>
 <dl class="section pre"><dt>Precondition</dt><dd><ul>
 <li><code>physicalDevice</code> is valid</li>
 <li><code>device</code> is valid</li>
-<li><code>pImageCreateInfos</code> points to <code>imageCount</code> elements</li>
-<li><code>pMemoryPropertyFlags</code> points to <code>imageCount</code> elements</li>
-<li><code>pImageGroup</code> is non-<code>NULL</code></li>
-<li><code>pImageGroup</code> is uninitialized </li>
+<li><code>pImageCreateInfos</code> points to <code>imageCount</code> values</li>
+<li><code>pMemoryPropertyFlags</code> points to <code>imageCount</code> values</li>
+<li><code>pImageGroup</code> is non-<code>NULL</code> and uninitialized</li>
+</ul>
+</dd></dl>
+<dl class="section post"><dt>Postcondition</dt><dd><ul>
+<li>if result indicates success, <code>pImageGroup</code> is properly initialized</li>
+<li>if result indicates failure, <code>pImageGroup</code> is nullified</li>
+</ul>
+</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>If <code>imageCount</code> is <code>0</code><ul>
+<li><code>pImageCreateInfos</code> may be <code>NULL</code></li>
+<li><code>pMemoryPropertyFlags</code> may be <code>NULL</code></li>
+<li><code>pImageGroup</code> is nullified</li>
+<li>result is <code>VK_SUCCESS</code> </li>
 </ul>
 </dd></dl>
 
@@ -352,21 +385,17 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>If <code>pImageGroup</code> is <code>NULL</code>, does nothing.</dd></dl>
-<dl class="section pre"><dt>Precondition</dt><dd>If <code>pImageGroup</code> is non-<code>NULL</code> with non-<code>NULL</code> members,<ul>
-<li><code>pImageGroup</code> must have been initialized by <code>vkxCreateImageGroup</code></li>
-<li><code>device</code> must have been passed to <code>vkxCreateImageGroup</code></li>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li><code>device</code> was used to create <code>pImageGroup</code></li>
+<li><code>pAllocator</code> was used to create <code>pImageGroup</code></li>
+<li><code>pImageGroup</code> was previously created by <code>vkxCreateImageGroup</code></li>
 </ul>
 </dd></dl>
-<dl class="section post"><dt>Postcondition</dt><dd>If <code>pImageGroup</code> is non-<code>NULL</code>,<ul>
-<li><code>pImageGroup-&gt;imageCount</code> is <code>0</code></li>
-<li><code>pImageGroup-&gt;pImages</code> is <code>NULL</code></li>
-<li><code>pImageGroup-&gt;sharedMemory.uniqueMemoryCount</code> is <code>0</code></li>
-<li><code>pImageGroup-&gt;sharedMemory.pUniqueMemories</code> is <code>NULL</code></li>
-<li><code>pImageGroup-&gt;sharedMemory.memoryViewCount</code> is <code>0</code></li>
-<li><code>pImageGroup-&gt;sharedMemory.pMemoryViews</code> is <code>NULL</code> </li>
+<dl class="section post"><dt>Postcondition</dt><dd><ul>
+<li><code>pImageGroup</code> is nullified</li>
 </ul>
 </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Does nothing if <code>pImageGroup</code> is <code>NULL</code>. </dd></dl>
 
 </div>
 </div>
@@ -426,7 +455,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Transition image layout. </p>
+<p>Transition image layout command. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">commandBuffer</td><td>Command buffer.</td></tr>
@@ -435,10 +464,470 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">newLayout</td><td>New image layout.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">subresourceRange</td><td>Subresource range.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">srcStageMask</td><td>Stage mask.</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dstStageMask</td><td>Stage mask. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dstStageMask</td><td>Stage mask.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li><code>commandBuffer</code> is valid</li>
+<li><code>commandBuffer</code> is in the recording state</li>
+<li><code>image</code> is valid </li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+<a id="gaa8d046173133a71ae1bafbecc64157af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa8d046173133a71ae1bafbecc64157af">&#9670;&nbsp;</a></span>vkxTransitionImageLayout()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxTransitionImageLayout </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImage&#160;</td>
+          <td class="paramname"><em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImageLayout&#160;</td>
+          <td class="paramname"><em>oldLayout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImageLayout&#160;</td>
+          <td class="paramname"><em>newLayout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImageSubresourceRange&#160;</td>
+          <td class="paramname"><em>subresourceRange</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Transition image layout. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">image</td><td>Image.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">oldLayout</td><td>Old layout.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">newLayout</td><td>New layout.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">subresourceRange</td><td>Subresource range.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li>all Vulkan handles are valid</li>
+<li><code>queue</code> is compatible with <code>commandPool</code> </li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+<a id="gae518897017a4953aca259522c1f695df"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae518897017a4953aca259522c1f695df">&#9670;&nbsp;</a></span>vkxCopyImageToBuffer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxCopyImageToBuffer </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImage&#160;</td>
+          <td class="paramname"><em>srcImage</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImageLayout&#160;</td>
+          <td class="paramname"><em>srcImageLayout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkBuffer&#160;</td>
+          <td class="paramname"><em>dstBuffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>regionCount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkBufferImageCopy *&#160;</td>
+          <td class="paramname"><em>pRegions</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Copy image to buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">srcImage</td><td>Source image.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">srcImageLayout</td><td>Source image layout.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dstBuffer</td><td>Destination buffer.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">regionCount</td><td>Region count.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pRegions</td><td>Regions.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li>all Vulkan handles are valid</li>
+<li><code>queue</code> is compatible with <code>commandPool</code></li>
+<li><code>srcImage</code> supports <code>VK_IMAGE_USAGE_TRANSFER_SRC_BIT</code></li>
+<li><code>srcImageLayout</code> is <code>VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL</code>, <code>VK_IMAGE_LAYOUT_GENERAL</code>, or <code>VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR</code></li>
+<li><code>dstBuffer</code> supports <code>VK_BUFFER_USAGE_TRANSFER_SRC_BIT</code></li>
+<li><code>pRegions</code> points to <code>regionCount</code> values</li>
+<li><code>pRegions</code> is <code>NULL</code> only if <code>regionCount</code> is <code>0</code>, in which case the implementation immediately returns <code>VK_SUCCESS</code> </li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+<a id="gadf13afac14798cfeb4a86f3d07824010"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gadf13afac14798cfeb4a86f3d07824010">&#9670;&nbsp;</a></span>vkxCopyBufferToImage()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxCopyBufferToImage </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkBuffer&#160;</td>
+          <td class="paramname"><em>srcBuffer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImage&#160;</td>
+          <td class="paramname"><em>dstImage</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImageLayout&#160;</td>
+          <td class="paramname"><em>dstImageLayout</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>regionCount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkBufferImageCopy *&#160;</td>
+          <td class="paramname"><em>pRegions</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Copy buffer to image. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">srcBuffer</td><td>Source buffer.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dstImage</td><td>Destination image.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">dstImageLayout</td><td>Destination image layout.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">regionCount</td><td>Region count.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pRegions</td><td>Regions.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li>all Vulkan handles are valid</li>
+<li><code>queue</code> is compatible with <code>commandPool</code></li>
+<li><code>srcBuffer</code> supports <code>VK_BUFFER_USAGE_TRANSFER_SRC_BIT</code></li>
+<li><code>dstImage</code> supports <code>VK_IMAGE_USAGE_TRANSFER_DST_BIT</code></li>
+<li><code>dstImageLayout</code> is <code>VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL</code>, <code>VK_IMAGE_LAYOUT_GENERAL</code>, or <code>VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR</code></li>
+<li><code>pRegions</code> points to <code>regionCount</code> values</li>
+<li><code>pRegions</code> is <code>NULL</code> only if <code>regionCount</code> is <code>0</code>, in which case the implementation immediately returns <code>VK_SUCCESS</code> </li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+<a id="gace28ffb2d0801a7bd86cfa2cdf1b2bcc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gace28ffb2d0801a7bd86cfa2cdf1b2bcc">&#9670;&nbsp;</a></span>vkxGetImageData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxGetImageData </td>
+          <td>(</td>
+          <td class="paramtype">VkPhysicalDevice&#160;</td>
+          <td class="paramname"><em>physicalDevice</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImage&#160;</td>
+          <td class="paramname"><em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structVkxImageDataAccess.html">VkxImageDataAccess</a> *&#160;</td>
+          <td class="paramname"><em>pImageDataAccess</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>pData</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get image data via temporary staging buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">physicalDevice</td><td>Physical device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">image</td><td>Image.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pImageDataAccess</td><td>Image data access.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pData</td><td>Data.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li>all Vulkan handles are valid</li>
+<li><code>queue</code> is compatible with <code>commandPool</code></li>
+<li><code>image</code> supports <code>VK_IMAGE_USAGE_TRANSFER_SRC_BIT</code></li>
+<li><code>pImageDataAccess</code> is non-<code>NULL</code></li>
+<li><code>pImageDataAccess-&gt;layout</code> is <code>VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL</code>, <code>VK_IMAGE_LAYOUT_GENERAL</code>, or <code>VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR</code></li>
+<li><code>pData</code> points to <code>pImageDataAccess-&gt;size</code> bytes</li>
+<li><code>pData</code> is <code>NULL</code> only if <code>pImageDataAccess-&gt;size</code> is <code>0</code>, in which case the implementation immediately returns <code>VK_SUCCESS</code> </li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+<a id="gae66406762943bb4737bf71f4724636e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gae66406762943bb4737bf71f4724636e3">&#9670;&nbsp;</a></span>vkxSetImageData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxSetImageData </td>
+          <td>(</td>
+          <td class="paramtype">VkPhysicalDevice&#160;</td>
+          <td class="paramname"><em>physicalDevice</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkQueue&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkCommandPool&#160;</td>
+          <td class="paramname"><em>commandPool</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkImage&#160;</td>
+          <td class="paramname"><em>image</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structVkxImageDataAccess.html">VkxImageDataAccess</a> *&#160;</td>
+          <td class="paramname"><em>pImageDataAccess</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const void *&#160;</td>
+          <td class="paramname"><em>pData</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set image data via temporary staging buffer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">physicalDevice</td><td>Physical device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>Queue.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">commandPool</td><td>Command pool.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">image</td><td>Image.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pImageDataAccess</td><td>Image data access.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pData</td><td>Data.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li>all Vulkan handles are valid</li>
+<li><code>queue</code> is compatible with <code>commandPool</code></li>
+<li><code>image</code> supports <code>VK_IMAGE_USAGE_TRANSFER_DST_BIT</code></li>
+<li><code>pImageDataAccess</code> is non-<code>NULL</code></li>
+<li><code>pImageDataAccess-&gt;layout</code> is <code>VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL</code>, <code>VK_IMAGE_LAYOUT_GENERAL</code>, or <code>VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR</code></li>
+<li><code>pData</code> points to <code>pImageDataAccess-&gt;size</code> bytes</li>
+<li><code>pData</code> is <code>NULL</code> only if <code>pImageDataAccess-&gt;size</code> is <code>0</code>, in which case the implementation immediately returns <code>VK_SUCCESS</code> </li>
+</ul>
+</dd></dl>
 
 </div>
 </div>

@@ -193,9 +193,9 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">engineVersion</td><td>Engine version, from <code>VK_MAKE_VERSION</code>.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">apiVersion</td><td>API version.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">requestedLayerCount</td><td>Requested instance layer count.</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ppRequestedLayerNames</td><td>Requested instance layer names. If <code>NULL</code>, then <code>requestedLayerCount</code> must be <code>0</code>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ppRequestedLayerNames</td><td>Requested instance layer names.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">requestedExtensionCount</td><td>Requested instance extension count.</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ppRequestedExtensionNames</td><td>Requested instance extension names. If <code>NULL</code>, then <code>requestedExtensionCount</code> must be <code>0</code>.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ppRequestedExtensionNames</td><td>Requested instance extension names.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">pRequestedLayersEnabled</td><td><em>Optional</em>. Booleans to indicate which requested layers were enabled.</td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">pRequestedExtensionsEnabled</td><td><em>Optional</em>. Booleans to indicate which requested extensions were enabled.</td></tr>
@@ -315,10 +315,16 @@ Functions</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">requestedTiling</td><td>Requested tiling.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">requestedFeatures</td><td>Requested features.</td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">candidateFormatCount</td><td>Candidate format count.</td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pCandidateFormats</td><td>Candidate formats. If <code>NULL</code>, then <code>candidateFormatCount</code> must be <code>0</code>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pCandidateFormats</td><td>Candidate formats.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section pre"><dt>Precondition</dt><dd><ul>
+<li><code>physicalDevice</code> is valid</li>
+<li><code>pCandidateFormats</code> points to <code>candidateFormatCount</code> values</li>
+</ul>
+</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Format in <code>pCandidateFormats</code> with <code>requestedFeatures</code>, or <code>VK_FORMAT_UNDEFINED</code> if no such format exists. </dd></dl>
 
 </div>
 </div>
