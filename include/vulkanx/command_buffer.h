@@ -90,6 +90,35 @@ VkResult vkxFlushCommandBuffers(
             const VkCommandBuffer* pCommandBuffers,
             const VkAllocationCallbacks* pAllocator);
 
+/**
+ * @brief End, flush, and free command buffers.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] queue
+ * Queue.
+ *
+ * @param[in] commandPool
+ * Command pool.
+ *
+ * @param[in] commandBufferCount
+ * Command buffer count.
+ *
+ * @param[in] pCommandBuffers
+ * Command buffers.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ */
+VkResult vkxEndFlushAndFreeCommandBuffers(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            uint32_t commandBufferCount,
+            const VkCommandBuffer* pCommandBuffers,
+            const VkAllocationCallbacks* pAllocator);
+
 /**@}*/
 
 #ifdef __cplusplus

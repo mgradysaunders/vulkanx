@@ -155,3 +155,46 @@ VkResult vkxFlushCommandBuffers(
 
     return result;
 }
+
+// End, flush, and free command buffers.
+VkResult vkxEndFlushAndFreeCommandBuffers(
+            VkDevice device,
+            VkQueue queue,
+            VkCommandPool commandPool,
+            uint32_t commandBufferCount,
+            const VkCommandBuffer* pCommandBuffers,
+            const VkAllocationCallbacks* pAllocator)
+{
+    if (commandBufferCount == 0) {
+        return VK_SUCCESS;
+    }
+
+    assert(pCommandBuffers);
+
+    for (uint32_t commandBufferIndex = 0;
+                  commandBufferIndex < commandBufferCount;
+                  commandBufferIndex++) {
+        // End.
+        vkEndCommandBuffer(pCommandBuffers[commandBufferIndex]);
+    }
+
+    // Flush.
+    VkResult result =
+        vkxFlushCommandBuffers(
+                device,
+                queue,
+                commandBufferCount,
+                pCommandBuffers,
+                pAllocator);
+
+    // Free.
+    vkFreeCommandBuffers(
+            device,
+            commandPool,
+            commandBufferCount,
+            pCommandBuffers);
+
+    return result;
+}
+
+
