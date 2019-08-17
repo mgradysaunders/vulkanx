@@ -123,7 +123,7 @@ VkResult vkxCreateBuffer(
  * - `pBuffer` is nullified
  *
  * @note
- * If `pBuffer` is `NULL`, does nothing.
+ * Does nothing if `pBuffer` is `NULL`.
  */
 void vkxDestroyBuffer(
             VkDevice device,
