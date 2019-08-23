@@ -64,11 +64,141 @@ $(function() {
 <div id="main-nav"></div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#nested-classes">Data Structures</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">Descriptor set</div>  </div>
 </div><!--header-->
 <div class="contents">
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Data Structures</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structVkxDescriptorSetGroup.html">VkxDescriptorSetGroup</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Descriptor set group.  <a href="structVkxDescriptorSetGroup.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga10701e546bc90beae474d0ada13ae9e0"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__descriptor__set.html#ga10701e546bc90beae474d0ada13ae9e0">vkxCreateDescriptorSetGroup</a> (VkDevice device, uint32_t setLayoutCount, const VkDescriptorSetLayoutCreateInfo *pSetLayoutCreateInfos, const uint32_t *pSetCounts, const VkAllocationCallbacks *pAllocator, <a class="el" href="structVkxDescriptorSetGroup.html">VkxDescriptorSetGroup</a> *pSetGroup)</td></tr>
+<tr class="memdesc:ga10701e546bc90beae474d0ada13ae9e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create descriptor set group.  <a href="#ga10701e546bc90beae474d0ada13ae9e0">More...</a><br /></td></tr>
+<tr class="separator:ga10701e546bc90beae474d0ada13ae9e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga718caf12db43a3761383f0f14106a82c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__descriptor__set.html#ga718caf12db43a3761383f0f14106a82c">vkxDestroyDescriptorSetGroup</a> (VkDevice device, <a class="el" href="structVkxDescriptorSetGroup.html">VkxDescriptorSetGroup</a> *pSetGroup, const VkAllocationCallbacks *pAllocator)</td></tr>
+<tr class="memdesc:ga718caf12db43a3761383f0f14106a82c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy descriptor set group.  <a href="#ga718caf12db43a3761383f0f14106a82c">More...</a><br /></td></tr>
+<tr class="separator:ga718caf12db43a3761383f0f14106a82c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p><code>&lt;vulkanx/descriptor_set.h&gt;</code> </p>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ga10701e546bc90beae474d0ada13ae9e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga10701e546bc90beae474d0ada13ae9e0">&#9670;&nbsp;</a></span>vkxCreateDescriptorSetGroup()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxCreateDescriptorSetGroup </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>setLayoutCount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkDescriptorSetLayoutCreateInfo *&#160;</td>
+          <td class="paramname"><em>pSetLayoutCreateInfos</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const uint32_t *&#160;</td>
+          <td class="paramname"><em>pSetCounts</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structVkxDescriptorSetGroup.html">VkxDescriptorSetGroup</a> *&#160;</td>
+          <td class="paramname"><em>pSetGroup</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create descriptor set group. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">setLayoutCount</td><td>Set layout count.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pSetLayoutCreateInfos</td><td>Set layout create infos.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pSetCounts</td><td>Set counts for each set layout.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pSetGroup</td><td>Set group. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga718caf12db43a3761383f0f14106a82c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga718caf12db43a3761383f0f14106a82c">&#9670;&nbsp;</a></span>vkxDestroyDescriptorSetGroup()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void vkxDestroyDescriptorSetGroup </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structVkxDescriptorSetGroup.html">VkxDescriptorSetGroup</a> *&#160;</td>
+          <td class="paramname"><em>pSetGroup</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Destroy descriptor set group. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pSetGroup</td><td>Set group.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.13-->
 <!-- start footer part -->
