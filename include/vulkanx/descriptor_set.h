@@ -43,6 +43,84 @@ extern "C" {
  */
 /**@{*/
 
+/**
+ * @brief Descriptor set group.
+ */
+typedef struct VkxDescriptorSetGroup_
+{
+    /**
+     * @brief Set layout count.
+     */
+    uint32_t setLayoutCount;
+
+    /**
+     * @brief Set layouts.
+     */
+    VkDescriptorSetLayout* pSetLayouts;
+
+    /**
+     * @brief Set counts for each set layout.
+     */
+    uint32_t* pSetCounts;
+
+    /**
+     * @brief Sets for each set layout.
+     */
+    VkDescriptorSet** ppSets;
+
+    /**
+     * @brief Pool.
+     */
+    VkDescriptorPool pool;
+}
+VkxDescriptorSetGroup;
+
+/**
+ * @brief Create descriptor set group.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] setLayoutCount
+ * Set layout count.
+ *
+ * @param[in] pSetLayoutCreateInfos
+ * Set layout create infos.
+ *
+ * @param[in] pSetCounts
+ * Set counts for each set layout.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pSetGroup
+ * Set group.
+ */
+VkResult vkxCreateDescriptorSetGroup(
+            VkDevice device,
+            uint32_t setLayoutCount,
+            const VkDescriptorSetLayoutCreateInfo* pSetLayoutCreateInfos,
+            const uint32_t* pSetCounts,
+            const VkAllocationCallbacks* pAllocator,
+            VkxDescriptorSetGroup* pSetGroup) __attribute__((nonnull(5)));
+
+/**
+ * @brief Destroy descriptor set group.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[inout] pSetGroup
+ * Set group.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ */
+void vkxDestroyDescriptorSetGroup(
+            VkDevice device,
+            VkxDescriptorSetGroup* pSetGroup,
+            const VkAllocationCallbacks* pAllocator);
+
 /**@}*/
 
 #ifdef __cplusplus
