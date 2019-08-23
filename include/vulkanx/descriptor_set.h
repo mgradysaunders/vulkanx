@@ -102,7 +102,7 @@ VkResult vkxCreateDescriptorSetGroup(
             const VkDescriptorSetLayoutCreateInfo* pSetLayoutCreateInfos,
             const uint32_t* pSetCounts,
             const VkAllocationCallbacks* pAllocator,
-            VkxDescriptorSetGroup* pSetGroup) __attribute__((nonnull(5)));
+            VkxDescriptorSetGroup* pSetGroup) __attribute__((nonnull(6)));
 
 /**
  * @brief Destroy descriptor set group.
