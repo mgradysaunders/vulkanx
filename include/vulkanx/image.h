@@ -231,6 +231,37 @@ void vkxDestroyImageGroup(
             VkxImageGroup* pImageGroup,
             const VkAllocationCallbacks* pAllocator);
 
+
+/**
+ * @brief Create default image view.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] pImageCreateInfo
+ * Image create info.
+ *
+ * @param[in] image
+ * Image.
+ *
+ * @param[in] imageAspectMask
+ * Image aspect mask.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pImageView
+ * Image view.
+ */
+VkResult vkxCreateDefaultImageView(
+            VkDevice device,
+            const VkImageCreateInfo* pImageCreateInfo,
+            VkImage image,
+            VkImageAspectFlags imageAspectMask,
+            const VkAllocationCallbacks* pAllocator,
+            VkImageView* pImageView)
+                __attribute__((nonnull(2, 6)));
+
 /**
  * @brief Transition image layout command.
  *

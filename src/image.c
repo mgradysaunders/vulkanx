@@ -281,6 +281,54 @@ void vkxDestroyImageGroup(
     }
 }
 
+// Create default image view.
+VkResult vkxCreateDefaultImageView(
+            VkDevice device,
+            const VkImageCreateInfo* pImageCreateInfo,
+            VkImage image,
+            VkImageAspectFlags imageAspectMask,
+            const VkAllocationCallbacks* pAllocator,
+            VkImageView* pImageView)
+{
+    assert(pImageCreateInfo);
+    assert(pImageView);
+
+    // Sanity check.
+    // At the time of writing, the Vulkan specification defines the
+    // 1D, 2D, and 3D enumerations of VkImageType and VkImageViewType as 0, 1,
+    // and 2 respectively.
+    _Static_assert(
+            (int)VK_IMAGE_TYPE_1D == (int)VK_IMAGE_VIEW_TYPE_1D &&
+            (int)VK_IMAGE_TYPE_2D == (int)VK_IMAGE_VIEW_TYPE_2D &&
+            (int)VK_IMAGE_TYPE_3D == (int)VK_IMAGE_VIEW_TYPE_3D,
+            "Invalid assumption");
+
+    VkImageViewCreateInfo imageViewCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .image = image,
+        .viewType = pImageCreateInfo->imageType,
+        .format = pImageCreateInfo->format,
+        .components = {
+            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .a = VK_COMPONENT_SWIZZLE_IDENTITY
+        },
+        .subresourceRange = {
+            .aspectMask = imageAspectMask,
+            .baseMipLevel = 0, .levelCount = pImageCreateInfo->mipLevels,
+            .baseArrayLayer = 0, .layerCount = pImageCreateInfo->arrayLayers
+        }
+    };
+
+    return vkCreateImageView(
+                device,
+                &imageViewCreateInfo, pAllocator,
+                pImageView);
+}
+
 // Transition image layout.
 VkResult vkxCmdTransitionImageLayout(
             VkCommandBuffer commandBuffer,
