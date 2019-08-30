@@ -30,6 +30,126 @@
 #include <vulkanx/result.h>
 #include <vulkanx/command_buffer.h>
 
+// Create default fences.
+VkResult vkxCreateDefaultFences(
+                VkDevice device,
+                uint32_t fenceCount,
+                const VkAllocationCallbacks* pAllocator,
+                VkFence* pFences)
+{
+    if (fenceCount == 0) {
+        return VK_SUCCESS;
+    }
+
+    assert(pFences);
+
+    for (uint32_t fenceIndex = 0;
+                  fenceIndex < fenceCount;
+                  fenceIndex++) {
+        // Nullify.
+        pFences[fenceIndex] = VK_NULL_HANDLE;
+    }
+
+    // Default fence create info.
+    VkFenceCreateInfo fenceCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0
+    };
+
+    VkResult result = VK_SUCCESS;
+    for (uint32_t fenceIndex = 0;
+                  fenceIndex < fenceCount;
+                  fenceIndex++) {
+        // Create fence.
+        result = 
+            vkCreateFence(
+                    device, 
+                    &fenceCreateInfo, pAllocator, 
+                    &pFences[fenceIndex]);
+        if (VKX_IS_ERROR(result)) {
+            pFences[fenceIndex] = VK_NULL_HANDLE;
+            break;
+        }
+    }
+
+    // Error?
+    if (VKX_IS_ERROR(result)) {
+        for (uint32_t fenceIndex = 0;
+                      fenceIndex < fenceCount;
+                      fenceIndex++) {
+            // Destroy.
+            vkDestroyFence(
+                    device,
+                    pFences[fenceIndex],
+                    pAllocator);
+            // Nullify.
+            pFences[fenceIndex] = VK_NULL_HANDLE;
+        }
+    }
+    return result;
+}
+
+// Create default semaphores.
+VkResult vkxCreateDefaultSemaphores(
+                VkDevice device,
+                uint32_t semaphoreCount,
+                const VkAllocationCallbacks* pAllocator,
+                VkSemaphore* pSemaphores)
+{
+    if (semaphoreCount == 0) {
+        return VK_SUCCESS;
+    }
+
+    assert(pSemaphores);
+
+    for (uint32_t semaphoreIndex = 0;
+                  semaphoreIndex < semaphoreCount;
+                  semaphoreIndex++) {
+        // Nullify.
+        pSemaphores[semaphoreIndex] = VK_NULL_HANDLE;
+    }
+
+    // Default semaphore create info.
+    VkSemaphoreCreateInfo semaphoreCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0
+    };
+
+    VkResult result = VK_SUCCESS;
+    for (uint32_t semaphoreIndex = 0;
+                  semaphoreIndex < semaphoreCount;
+                  semaphoreIndex++) {
+        // Create fence.
+        result = 
+            vkCreateSemaphore(
+                    device, 
+                    &semaphoreCreateInfo, pAllocator, 
+                    &pSemaphores[semaphoreIndex]);
+        if (VKX_IS_ERROR(result)) {
+            pSemaphores[semaphoreIndex] = VK_NULL_HANDLE;
+            break;
+        }
+    }
+
+    // Error?
+    if (VKX_IS_ERROR(result)) {
+        for (uint32_t semaphoreIndex = 0;
+                      semaphoreIndex < semaphoreCount;
+                      semaphoreIndex++) {
+            // Destroy.
+            vkDestroySemaphore(
+                    device, 
+                    pSemaphores[semaphoreIndex], 
+                    pAllocator);
+            // Nullify.
+            pSemaphores[semaphoreIndex] = VK_NULL_HANDLE;
+        }
+    }
+    return result;
+}
+
 // Allocate and begin command buffers.
 VkResult vkxAllocateAndBeginCommandBuffers(
             VkDevice device,

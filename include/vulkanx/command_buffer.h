@@ -44,6 +44,48 @@ extern "C" {
 /**@{*/
 
 /**
+ * @brief Create default fences.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] fenceCount
+ * Fence count.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pFences
+ * Fences.
+ */
+VkResult vkxCreateDefaultFences(
+                VkDevice device,
+                uint32_t fenceCount,
+                const VkAllocationCallbacks* pAllocator,
+                VkFence* pFences);
+
+/**
+ * @brief Create default semaphores.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] semaphoreCount
+ * Semaphore count.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pSemaphores
+ * Semaphores.
+ */
+VkResult vkxCreateDefaultSemaphores(
+                VkDevice device,
+                uint32_t semaphoreCount,
+                const VkAllocationCallbacks* pAllocator,
+                VkSemaphore* pSemaphores);
+
+/**
  * @brief Allocate and begin command buffers.
  *
  * @param[in] device
