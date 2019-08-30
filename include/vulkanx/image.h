@@ -263,6 +263,39 @@ VkResult vkxCreateDefaultImageView(
                 __attribute__((nonnull(2, 6)));
 
 /**
+ * @brief Create default image views.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] imageCount
+ * Image count.
+ *
+ * @param[in] pImageCreateInfos
+ * Image create infos.
+ *
+ * @param[in] pImages
+ * Images.
+ *
+ * @param[in] pImageAspectMasks
+ * Image aspect masks.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pImageViews
+ * Image views.
+ */
+VkResult vkxCreateDefaultImageViews(
+            VkDevice device,
+            uint32_t imageCount,
+            const VkImageCreateInfo* pImageCreateInfos,
+            const VkImage* pImages,
+            const VkImageAspectFlags* pImageAspectMasks,
+            const VkAllocationCallbacks* pAllocator,
+            VkImageView* pImageViews);
+
+/**
  * @brief Transition image layout command.
  *
  * @param[in] commandBuffer

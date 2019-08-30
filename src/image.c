@@ -329,6 +329,64 @@ VkResult vkxCreateDefaultImageView(
                 pImageView);
 }
 
+// Create default image views.
+VkResult vkxCreateDefaultImageViews(
+            VkDevice device,
+            uint32_t imageCount,
+            const VkImageCreateInfo* pImageCreateInfos,
+            const VkImage* pImages,
+            const VkImageAspectFlags* pImageAspectMasks,
+            const VkAllocationCallbacks* pAllocator,
+            VkImageView* pImageViews)
+{
+    if (imageCount == 0) {
+        return VK_SUCCESS;
+    }
+
+    assert(pImageCreateInfos && pImages && pImageAspectMasks);
+
+    for (uint32_t imageIndex = 0;
+                  imageIndex < imageCount;
+                  imageIndex++) {
+        // Nullify.
+        pImageViews[imageIndex] = VK_NULL_HANDLE;
+    }
+
+    VkResult result = VK_SUCCESS;
+    for (uint32_t imageIndex = 0;
+                  imageIndex < imageCount;
+                  imageIndex++) {
+        // Create default image view.
+        result = 
+            vkxCreateDefaultImageView(
+                    device,
+                    &pImageCreateInfos[imageIndex],
+                    pImages[imageIndex],
+                    pImageAspectMasks[imageIndex],
+                    pAllocator,
+                    &pImageViews[imageIndex]);
+        if (VKX_IS_ERROR(result)) {
+            pImageViews[imageIndex] = VK_NULL_HANDLE;
+            break;
+        }
+    }
+
+    if (VKX_IS_ERROR(result)) {
+        for (uint32_t imageIndex = 0;
+                      imageIndex < imageCount;
+                      imageIndex++) {
+            // Destroy.
+            vkDestroyImageView(
+                    device,
+                    pImageViews[imageIndex],
+                    pAllocator);
+            // Nullify.
+            pImageViews[imageIndex] = VK_NULL_HANDLE;
+        }
+    }
+    return result;
+}
+
 // Transition image layout.
 VkResult vkxCmdTransitionImageLayout(
             VkCommandBuffer commandBuffer,
