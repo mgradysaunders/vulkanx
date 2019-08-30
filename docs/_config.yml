@@ -1,0 +1,16 @@
+author: M. Grady Saunders
+source: .
+destination: ./_site
+plugins_dir: ./_plugins
+layouts_dir: ./_layouts
+includes_dir: ./_includes
+encoding: "utf-8"
+markdown: kramdown
+markdown_ext: "markdown,md"
+liquid:
+    error_mode: strict
+nav:
+    -
+        linkname: Home
+        name: index.md
+        href: https://mgradysaunders.github.io/vulkanx
