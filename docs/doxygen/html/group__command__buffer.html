@@ -73,6 +73,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:ga845c56335be3320f31ab55b9f4450acb"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__command__buffer.html#ga845c56335be3320f31ab55b9f4450acb">vkxCreateDefaultFences</a> (VkDevice device, uint32_t fenceCount, const VkAllocationCallbacks *pAllocator, VkFence *pFences)</td></tr>
+<tr class="memdesc:ga845c56335be3320f31ab55b9f4450acb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create default fences.  <a href="#ga845c56335be3320f31ab55b9f4450acb">More...</a><br /></td></tr>
+<tr class="separator:ga845c56335be3320f31ab55b9f4450acb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga685545e552f966e441bf1ae42c85b2de"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__command__buffer.html#ga685545e552f966e441bf1ae42c85b2de">vkxCreateDefaultSemaphores</a> (VkDevice device, uint32_t semaphoreCount, const VkAllocationCallbacks *pAllocator, VkSemaphore *pSemaphores)</td></tr>
+<tr class="memdesc:ga685545e552f966e441bf1ae42c85b2de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create default semaphores.  <a href="#ga685545e552f966e441bf1ae42c85b2de">More...</a><br /></td></tr>
+<tr class="separator:ga685545e552f966e441bf1ae42c85b2de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga7391126377350ca48b89843205a5d6f7"><td class="memItemLeft" align="right" valign="top">VkResult&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__command__buffer.html#ga7391126377350ca48b89843205a5d6f7">vkxAllocateAndBeginCommandBuffers</a> (VkDevice device, const VkCommandBufferAllocateInfo *pAllocateInfo, const VkCommandBufferBeginInfo *pBeginInfos, VkCommandBuffer *pCommandBuffers)</td></tr>
 <tr class="memdesc:ga7391126377350ca48b89843205a5d6f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate and begin command buffers.  <a href="#ga7391126377350ca48b89843205a5d6f7">More...</a><br /></td></tr>
 <tr class="separator:ga7391126377350ca48b89843205a5d6f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -86,6 +92,108 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p><code>&lt;vulkanx/command_buffer.h&gt;</code> </p>
 <h2 class="groupheader">Function Documentation</h2>
+<a id="ga845c56335be3320f31ab55b9f4450acb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga845c56335be3320f31ab55b9f4450acb">&#9670;&nbsp;</a></span>vkxCreateDefaultFences()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxCreateDefaultFences </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>fenceCount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkFence *&#160;</td>
+          <td class="paramname"><em>pFences</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create default fences. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">fenceCount</td><td>Fence count.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pFences</td><td>Fences. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="ga685545e552f966e441bf1ae42c85b2de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga685545e552f966e441bf1ae42c85b2de">&#9670;&nbsp;</a></span>vkxCreateDefaultSemaphores()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">VkResult vkxCreateDefaultSemaphores </td>
+          <td>(</td>
+          <td class="paramtype">VkDevice&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>semaphoreCount</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const VkAllocationCallbacks *&#160;</td>
+          <td class="paramname"><em>pAllocator</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">VkSemaphore *&#160;</td>
+          <td class="paramname"><em>pSemaphores</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create default semaphores. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>Device.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">semaphoreCount</td><td>Semaphore count.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pAllocator</td><td><em>Optional</em>. Allocation callbacks.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pSemaphores</td><td>Semaphores. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="ga7391126377350ca48b89843205a5d6f7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ga7391126377350ca48b89843205a5d6f7">&#9670;&nbsp;</a></span>vkxAllocateAndBeginCommandBuffers()</h2>
 
