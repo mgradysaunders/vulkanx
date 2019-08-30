@@ -167,6 +167,43 @@ VkResult vkxFreeDynamicDescriptorSets(
                 __attribute__((nonnull(2)));
 
 /**
+ * @brief Bind dynamic descriptor sets.
+ *
+ * @param[in] commandBuffer
+ * Command buffer.
+ *
+ * @param[in] pipelineBindPoint
+ * Pipeline bind point.
+ *
+ * @param[in] pipelineLayout
+ * Pipeline layout.
+ *
+ * @param[in] firstSet
+ * First descriptor set.
+ *
+ * @param[in] setCount
+ * Descriptor set count.
+ *
+ * @param[in] pDynamicSets
+ * Dynamic descriptor sets.
+ *
+ * @param[in] dynamicOffsetCount
+ * Dynamic offset count.
+ *
+ * @param[in] pDynamicOffsets
+ * Dynamic offsets.
+ */
+void vkxCmdBindDynamicDescriptorSets(
+            VkCommandBuffer commandBuffer,
+            VkPipelineBindPoint pipelineBindPoint,
+            VkPipelineLayout pipelineLayout,
+            uint32_t firstSet,
+            uint32_t setCount,
+            const VkxDynamicDescriptorSet* pDynamicSets,
+            uint32_t dynamicOffsetCount,
+            const uint32_t* pDynamicOffsets);
+
+/**
  * @brief Destroy dynamic descriptor pool.
  *
  * @param[in] device

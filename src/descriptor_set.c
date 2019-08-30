@@ -294,6 +294,41 @@ VkResult vkxFreeDynamicDescriptorSets(
     return VK_SUCCESS;
 }
 
+// Bind dynamic descriptor sets.
+void vkxCmdBindDynamicDescriptorSets(
+            VkCommandBuffer commandBuffer,
+            VkPipelineBindPoint pipelineBindPoint,
+            VkPipelineLayout pipelineLayout,
+            uint32_t firstSet,
+            uint32_t setCount,
+            const VkxDynamicDescriptorSet* pDynamicSets,
+            uint32_t dynamicOffsetCount,
+            const uint32_t* pDynamicOffsets)
+{
+    // Allocate descriptor set array.
+    VkDescriptorSet* pSets = 
+        (VkDescriptorSet*)VKX_LOCAL_MALLOC(
+                sizeof(VkDescriptorSet) * setCount);
+
+    // Initialize descriptor set array.
+    for (uint32_t setIndex = 0;
+                  setIndex < setCount; setIndex++) {
+        pSets[setIndex] = pDynamicSets[setIndex].set;
+    }
+
+    // Bind descriptor sets.
+    vkCmdBindDescriptorSets(
+            commandBuffer,
+            pipelineBindPoint,
+            pipelineLayout,
+            firstSet,
+            setCount, pSets,
+            dynamicOffsetCount, pDynamicOffsets);
+
+    // Free descriptor set array.
+    VKX_LOCAL_FREE(pSets);
+}
+
 // Destroy dynamic descriptor pool.
 void vkxDestroyDynamicDescriptorPool(
             VkDevice device,
