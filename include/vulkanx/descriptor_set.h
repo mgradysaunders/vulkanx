@@ -44,6 +44,76 @@ extern "C" {
 /**@{*/
 
 /**
+ * @brief Descriptor set group.
+ */
+typedef struct VkxDescriptorSetGroup_
+{
+    /**
+     * @brief Descriptor set layout.
+     */
+    VkDescriptorSetLayout setLayout;
+
+    /**
+     * @brief Descriptor set count.
+     */
+    uint32_t setCount;
+
+    /**
+     * @brief Descriptor sets.
+     */
+    VkDescriptorSet* pSets;
+
+    /**
+     * @brief Descriptor pool.
+     */
+    VkDescriptorPool pool;
+}
+VkxDescriptorSetGroup;
+
+/**
+ * @brief Create descriptor set group.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] pSetLayoutCreateInfo
+ * Descriptor set layout create info.
+ *
+ * @param[in] setCount
+ * Descriptor set count.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pSetGroup
+ * Descriptor set group.
+ */
+VkResult vkxCreateDescriptorSetGroup(
+            VkDevice device,
+            const VkDescriptorSetLayoutCreateInfo* pSetLayoutCreateInfo,
+            uint32_t setCount,
+            const VkAllocationCallbacks* pAllocator,
+            VkxDescriptorSetGroup* pSetGroup)
+                __attribute__((nonnull(2, 5)));
+
+/**
+ * @brief Destroy descriptor set group.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[inout] pSetGroup
+ * Descriptor set group.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ */
+void vkxDestroyDescriptorSetGroup(
+            VkDevice device,
+            VkxDescriptorSetGroup* pSetGroup,
+            const VkAllocationCallbacks* pAllocator);
+
+/**
  * @brief Dynamic descriptor pool.
  */
 typedef struct VkxDynamicDescriptorPool_

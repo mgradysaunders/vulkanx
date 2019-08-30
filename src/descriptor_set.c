@@ -33,6 +33,161 @@
 #include <vulkanx/result.h>
 #include <vulkanx/descriptor_set.h>
 
+// Create descriptor set group.
+VkResult vkxCreateDescriptorSetGroup(
+            VkDevice device,
+            const VkDescriptorSetLayoutCreateInfo* pSetLayoutCreateInfo,
+            uint32_t setCount,
+            const VkAllocationCallbacks* pAllocator,
+            VkxDescriptorSetGroup* pSetGroup)
+{
+    assert(pSetLayoutCreateInfo);
+    assert(pSetGroup);
+    memset(pSetGroup, 0, sizeof(VkxDescriptorSetGroup));
+    {
+        // Count descriptors.
+        uint32_t descriptorCounts[16];
+        for (uint32_t typeIndex = 0; 
+                      typeIndex < 16; typeIndex++) {
+            descriptorCounts[typeIndex] = 0;
+        }
+        for (uint32_t bindingIndex = 0;
+                      bindingIndex < pSetLayoutCreateInfo->bindingCount;
+                      bindingIndex++) {
+            const VkDescriptorSetLayoutBinding* pBinding = 
+                &pSetLayoutCreateInfo->pBindings[bindingIndex];
+            descriptorCounts[pBinding->descriptorType] += 
+                             pBinding->descriptorCount * setCount;
+        }
+
+        // Initialize descriptor pool sizes.
+        uint32_t poolSizeCount = 0;
+        VkDescriptorPoolSize poolSizes[16];
+        for (uint32_t typeIndex = 0; 
+                      typeIndex < 16; typeIndex++) {
+            if (descriptorCounts[typeIndex] > 0) {
+                poolSizes[poolSizeCount].type = typeIndex;
+                poolSizes[poolSizeCount].descriptorCount = 
+                    descriptorCounts[typeIndex];
+                poolSizeCount++;
+            }
+        }
+
+        // Descriptor pool create info.
+        VkDescriptorPoolCreateInfo poolCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .maxSets = setCount,
+            .poolSizeCount = poolSizeCount,
+            .pPoolSizes = &poolSizes[0]
+        };
+
+        // Create descriptor pool.
+        VkResult result = 
+            vkCreateDescriptorPool(
+                    device,
+                    &poolCreateInfo, pAllocator,
+                    &pSetGroup->pool);
+        // Create descriptor pool error?
+        if (VKX_IS_ERROR(result)) {
+            // Nullify.
+            pSetGroup->pool = VK_NULL_HANDLE;
+            // Return.
+            return result;
+        }
+    }
+
+    {
+        // Create descriptor set layout.
+        VkResult result = 
+            vkCreateDescriptorSetLayout(
+                    device,
+                    pSetLayoutCreateInfo,
+                    pAllocator,
+                    &pSetGroup->setLayout);
+        // Create descriptor set layout error?
+        if (VKX_IS_ERROR(result)) {
+            // Nullify.
+            pSetGroup->setLayout = VK_NULL_HANDLE;
+            // Destroy descriptor set group.
+            vkxDestroyDescriptorSetGroup(device, pSetGroup, pAllocator);
+            // Return.
+            return result;
+        }
+    }
+
+    // Allocate descriptor set array.
+    pSetGroup->setCount = setCount;
+    pSetGroup->pSets = 
+        (VkDescriptorSet*)malloc(sizeof(VkDescriptorSet) * setCount);
+
+    // Allocate descriptor set layout array.
+    VkDescriptorSetLayout* pSetLayouts = 
+        (VkDescriptorSetLayout*)VKX_LOCAL_MALLOC(
+                sizeof(VkDescriptorSetLayout) * setCount);
+    // Initialize descriptor set layout array.
+    for (uint32_t setIndex = 0;
+                  setIndex < setCount; setIndex++) {
+        pSetLayouts[setIndex] = pSetGroup->setLayout;
+    }
+
+    // Descriptor set allocate info.
+    VkDescriptorSetAllocateInfo setAllocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .pNext = NULL,
+        .descriptorPool = pSetGroup->pool,
+        .descriptorSetCount = setCount,
+        .pSetLayouts = pSetLayouts
+    };
+
+    // Allocate descriptor sets.
+    VkResult result = 
+        vkAllocateDescriptorSets(
+                device,
+                &setAllocateInfo,
+                &pSetGroup->pSets[0]);
+
+    // Allocate descriptor sets error?
+    if (VKX_IS_ERROR(result)) {
+        // Destroy descriptor set group.
+        vkxDestroyDescriptorSetGroup(device, pSetGroup, pAllocator);
+        // Fall through.
+    }
+
+    // Free descriptor set layout array.
+    VKX_LOCAL_FREE(pSetLayouts);
+    return result;
+}
+
+// Destroy descriptor set group.
+void vkxDestroyDescriptorSetGroup(
+            VkDevice device,
+            VkxDescriptorSetGroup* pSetGroup,
+            const VkAllocationCallbacks* pAllocator)
+{
+    if (pSetGroup) {
+
+        // Destroy descriptor set layout.
+        vkDestroyDescriptorSetLayout(
+                device,
+                pSetGroup->setLayout,
+                pAllocator);
+
+        // Destroy descriptor pool.
+        vkDestroyDescriptorPool(
+                device,
+                pSetGroup->pool,
+                pAllocator);
+
+        // Free descriptor set array.
+        free(pSetGroup->pSets);
+
+        // Nullify.
+        memset(pSetGroup, 0, sizeof(VkxDescriptorSetGroup));
+    }
+}
+
 // Create dynamic descriptor pool.
 VkResult vkxCreateDynamicDescriptorPool(
             VkDevice device,
@@ -44,6 +199,7 @@ VkResult vkxCreateDynamicDescriptorPool(
     assert(pDynamicPool);
     memset(pDynamicPool, 0, sizeof(VkxDynamicDescriptorPool));
 
+    // Create descriptor pool.
     VkDescriptorPool initialPool;
     VkResult result = 
         vkCreateDescriptorPool(
@@ -51,6 +207,7 @@ VkResult vkxCreateDynamicDescriptorPool(
                 pPoolCreateInfo,
                 pAllocator,
                 &initialPool);
+    // Create descriptor pool error?
     if (VKX_IS_ERROR(result)) {
         return result;
     }
@@ -224,7 +381,6 @@ VkResult vkxAllocateDynamicDescriptorSets(
 
     // Free descriptor set array.
     VKX_LOCAL_FREE(pSets);
-
     return VK_SUCCESS;
 }
 
@@ -336,23 +492,23 @@ void vkxDestroyDynamicDescriptorPool(
             const VkAllocationCallbacks* pAllocator)
 {
     if (pDynamicPool) {
-        // Free.
+        // Free pool size array.
         free((void*)pDynamicPool->poolCreateInfo.pPoolSizes);
 
         for (uint32_t poolIndex = 0;
                       poolIndex < pDynamicPool->poolCount;
                       poolIndex++) {
-            // Destroy.
+            // Destroy descriptor pool.
             vkDestroyDescriptorPool(
                     device,
                     pDynamicPool->pPools[poolIndex],
                     pAllocator);
         }
 
-        // Free.
+        // Free descriptor pool array.
         free(pDynamicPool->pPools);
 
-        // Free.
+        // Free descriptor pool full flags.
         free(pDynamicPool->pFullFlags);
 
         // Nullify.
