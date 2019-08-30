@@ -32,6 +32,7 @@
 
 #include <vulkanx/buffer.h>
 #include <vulkanx/command_buffer.h>
+#include <vulkanx/descriptor_set.h>
 #include <vulkanx/image.h>
 #include <vulkanx/memory.h>
 #include <vulkanx/result.h>
