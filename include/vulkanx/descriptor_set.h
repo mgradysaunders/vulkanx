@@ -182,7 +182,7 @@ VkResult vkxCreateDynamicDescriptorPool(
             const VkDescriptorPoolCreateInfo* pPoolCreateInfo,
             const VkAllocationCallbacks* pAllocator,
             VkxDynamicDescriptorPool* pDynamicPool)
-                __attribute__((nonnull(1, 3)));
+                __attribute__((nonnull(1, 4)));
 
 /**
  * @brief Allocate dynamic descriptor sets.
