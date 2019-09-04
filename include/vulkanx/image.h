@@ -238,14 +238,11 @@ void vkxDestroyImageGroup(
  * @param[in] device
  * Device.
  *
- * @param[in] pImageCreateInfo
- * Image create info.
- *
  * @param[in] image
  * Image.
  *
- * @param[in] imageAspectMask
- * Image aspect mask.
+ * @param[in] pImageCreateInfo
+ * Image create info.
  *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
@@ -255,12 +252,11 @@ void vkxDestroyImageGroup(
  */
 VkResult vkxCreateDefaultImageView(
             VkDevice device,
-            const VkImageCreateInfo* pImageCreateInfo,
             VkImage image,
-            VkImageAspectFlags imageAspectMask,
+            const VkImageCreateInfo* pImageCreateInfo,
             const VkAllocationCallbacks* pAllocator,
             VkImageView* pImageView)
-                __attribute__((nonnull(2, 6)));
+                __attribute__((nonnull(3, 5)));
 
 /**
  * @brief Create default image views.
@@ -271,14 +267,11 @@ VkResult vkxCreateDefaultImageView(
  * @param[in] imageCount
  * Image count.
  *
- * @param[in] pImageCreateInfos
- * Image create infos.
- *
  * @param[in] pImages
  * Images.
  *
- * @param[in] pImageAspectMasks
- * Image aspect masks.
+ * @param[in] pImageCreateInfos
+ * Image create infos.
  *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
@@ -289,9 +282,8 @@ VkResult vkxCreateDefaultImageView(
 VkResult vkxCreateDefaultImageViews(
             VkDevice device,
             uint32_t imageCount,
-            const VkImageCreateInfo* pImageCreateInfos,
             const VkImage* pImages,
-            const VkImageAspectFlags* pImageAspectMasks,
+            const VkImageCreateInfo* pImageCreateInfos,
             const VkAllocationCallbacks* pAllocator,
             VkImageView* pImageViews);
 

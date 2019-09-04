@@ -284,9 +284,8 @@ void vkxDestroyImageGroup(
 // Create default image view.
 VkResult vkxCreateDefaultImageView(
             VkDevice device,
-            const VkImageCreateInfo* pImageCreateInfo,
             VkImage image,
-            VkImageAspectFlags imageAspectMask,
+            const VkImageCreateInfo* pImageCreateInfo, 
             const VkAllocationCallbacks* pAllocator,
             VkImageView* pImageView)
 {
@@ -303,12 +302,53 @@ VkResult vkxCreateDefaultImageView(
             (int)VK_IMAGE_TYPE_3D == (int)VK_IMAGE_VIEW_TYPE_3D,
             "Invalid assumption");
 
+    // View type.
+    VkImageViewType viewType = pImageCreateInfo->imageType;
+    // Is cube compatible with multiple of 6 array layers?
+    if ((pImageCreateInfo->flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT) &&
+         pImageCreateInfo->arrayLayers % 6 == 0) {
+        viewType = pImageCreateInfo->arrayLayers > 6 
+            ? VK_IMAGE_VIEW_TYPE_CUBE_ARRAY 
+            : VK_IMAGE_VIEW_TYPE_CUBE;
+    }
+    // Is 1D image with more than 1 array layer?
+    else if (pImageCreateInfo->imageType == VK_IMAGE_TYPE_1D &&
+             pImageCreateInfo->arrayLayers > 1) {
+        viewType = VK_IMAGE_VIEW_TYPE_1D_ARRAY;
+    }
+    // Is 2D image with more than 1 array layer?
+    else if (pImageCreateInfo->imageType == VK_IMAGE_TYPE_2D &&
+             pImageCreateInfo->arrayLayers > 1) {
+        viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
+    }
+
+    // Deduce image aspect mask.
+    VkImageAspectFlags imageAspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    // Is depth format?
+    if (pImageCreateInfo->format == VK_FORMAT_D16_UNORM ||
+        pImageCreateInfo->format == VK_FORMAT_X8_D24_UNORM_PACK32 ||
+        pImageCreateInfo->format == VK_FORMAT_D32_SFLOAT) {
+        imageAspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+    }
+    // Is stencil format?
+    else if (pImageCreateInfo->format == VK_FORMAT_S8_UINT) {
+        imageAspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+    // Is depth/stencil format?
+    else if (pImageCreateInfo->format == VK_FORMAT_D16_UNORM_S8_UINT ||
+             pImageCreateInfo->format == VK_FORMAT_D24_UNORM_S8_UINT ||
+             pImageCreateInfo->format == VK_FORMAT_D32_SFLOAT_S8_UINT) {
+        imageAspectMask = 
+            VK_IMAGE_ASPECT_DEPTH_BIT | 
+            VK_IMAGE_ASPECT_STENCIL_BIT;
+    }
+
     VkImageViewCreateInfo imageViewCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
         .image = image,
-        .viewType = pImageCreateInfo->imageType,
+        .viewType = viewType,
         .format = pImageCreateInfo->format,
         .components = {
             .r = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -333,9 +373,8 @@ VkResult vkxCreateDefaultImageView(
 VkResult vkxCreateDefaultImageViews(
             VkDevice device,
             uint32_t imageCount,
-            const VkImageCreateInfo* pImageCreateInfos,
             const VkImage* pImages,
-            const VkImageAspectFlags* pImageAspectMasks,
+            const VkImageCreateInfo* pImageCreateInfos,
             const VkAllocationCallbacks* pAllocator,
             VkImageView* pImageViews)
 {
@@ -343,7 +382,7 @@ VkResult vkxCreateDefaultImageViews(
         return VK_SUCCESS;
     }
 
-    assert(pImageCreateInfos && pImages && pImageAspectMasks);
+    assert(pImages && pImageCreateInfos);
 
     for (uint32_t imageIndex = 0;
                   imageIndex < imageCount;
@@ -360,10 +399,8 @@ VkResult vkxCreateDefaultImageViews(
         result = 
             vkxCreateDefaultImageView(
                     device,
-                    &pImageCreateInfos[imageIndex],
                     pImages[imageIndex],
-                    pImageAspectMasks[imageIndex],
-                    pAllocator,
+                    &pImageCreateInfos[imageIndex], pAllocator,
                     &pImageViews[imageIndex]);
         if (VKX_IS_ERROR(result)) {
             pImageViews[imageIndex] = VK_NULL_HANDLE;
