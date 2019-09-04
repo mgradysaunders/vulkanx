@@ -521,3 +521,103 @@ VkFormat vkxGetDepthStencilFormat(VkPhysicalDevice physicalDevice)
     };
     return vkxSelectFormat(physicalDevice, 0, 0, 3, &candidateFormats[0]);
 }
+
+// Get format texel size.
+uint32_t vkxGetFormatTexelSize(VkFormat format)
+{
+    // 8-bit format?
+    if ((format == VK_FORMAT_R4G4_UNORM_PACK8) ||
+        (format >= VK_FORMAT_R8_UNORM &&
+         format <= VK_FORMAT_R8_SRGB) ||
+        (format == VK_FORMAT_S8_UINT)) {
+        return 1;
+    }
+
+    // 16-bit format?
+    if ((format >= VK_FORMAT_R4G4B4A4_UNORM_PACK16 &&
+         format <= VK_FORMAT_A1R5G5B5_UNORM_PACK16) ||
+        (format >= VK_FORMAT_R8G8_UNORM &&
+         format <= VK_FORMAT_R8G8_SRGB) ||
+        (format >= VK_FORMAT_R16_UNORM &&
+         format <= VK_FORMAT_R16_SFLOAT) ||
+        (format == VK_FORMAT_R10X6_UNORM_PACK16) ||
+        (format == VK_FORMAT_R12X4_UNORM_PACK16) ||
+        (format == VK_FORMAT_D16_UNORM)) {
+        return 2;
+    }
+
+    // 24-bit format?
+    if ((format >= VK_FORMAT_R8G8B8_UNORM &&
+         format <= VK_FORMAT_B8G8R8_SRGB) ||
+        (format == VK_FORMAT_D16_UNORM_S8_UINT)) {
+        return 3;
+    }
+
+    // 32-bit format?
+    if ((format >= VK_FORMAT_R8G8B8A8_UNORM &&
+         format <= VK_FORMAT_A2B10G10R10_SINT_PACK32) ||
+        (format >= VK_FORMAT_R16G16_UNORM &&
+         format <= VK_FORMAT_R16G16_SFLOAT) ||
+        (format >= VK_FORMAT_R32_UINT &&
+         format <= VK_FORMAT_R32_SFLOAT) ||
+        (format == VK_FORMAT_B10G11R11_UFLOAT_PACK32) ||
+        (format == VK_FORMAT_E5B9G9R9_UFLOAT_PACK32) ||
+        (format == VK_FORMAT_R10X6G10X6_UNORM_2PACK16) ||
+        (format == VK_FORMAT_R12X4G12X4_UNORM_2PACK16) ||
+        (format == VK_FORMAT_G8B8G8R8_422_UNORM) ||
+        (format == VK_FORMAT_B8G8R8G8_422_UNORM) ||
+        (format == VK_FORMAT_X8_D24_UNORM_PACK32) ||
+        (format == VK_FORMAT_D32_SFLOAT) ||
+        (format == VK_FORMAT_D24_UNORM_S8_UINT)) {
+        return 4;
+    }
+
+    // 40-bit format?
+    if (format == VK_FORMAT_D32_SFLOAT_S8_UINT) {
+        return 5;
+    }
+
+    // 48-bit format?
+    if (format >= VK_FORMAT_R16G16B16_UNORM &&
+        format <= VK_FORMAT_R16G16B16_SFLOAT) {
+        return 6;
+    }
+
+    // 64-bit format?
+    if ((format >= VK_FORMAT_R16G16B16A16_UNORM &&
+         format <= VK_FORMAT_R16G16B16A16_SFLOAT) ||
+        (format >= VK_FORMAT_R32G32_UINT &&
+         format <= VK_FORMAT_R32G32_SFLOAT) ||
+        (format >= VK_FORMAT_R64_UINT &&
+         format <= VK_FORMAT_R64_SFLOAT) ||
+        (format == VK_FORMAT_R10X6G10X6B10X6A10X6_UNORM_4PACK16) ||
+        (format == VK_FORMAT_G10X6B10X6G10X6R10X6_422_UNORM_4PACK16) ||
+        (format == VK_FORMAT_B10X6G10X6R10X6G10X6_422_UNORM_4PACK16) ||
+        (format == VK_FORMAT_R12X4G12X4B12X4A12X4_UNORM_4PACK16) ||
+        (format == VK_FORMAT_G12X4B12X4G12X4R12X4_422_UNORM_4PACK16) ||
+        (format == VK_FORMAT_B12X4G12X4R12X4G12X4_422_UNORM_4PACK16) ||
+        (format == VK_FORMAT_G16B16G16R16_422_UNORM) ||
+        (format == VK_FORMAT_B16G16R16G16_422_UNORM)) {
+        return 8;
+    }
+
+    // 96-bit format?
+    if (format >= VK_FORMAT_R32G32B32_UINT &&
+        format <= VK_FORMAT_R32G32B32_SFLOAT) {
+        return 12;
+    }
+
+    // 128-bit format?
+    if ((format >= VK_FORMAT_R32G32B32A32_UINT &&
+         format <= VK_FORMAT_R32G32B32A32_SFLOAT) ||
+        (format >= VK_FORMAT_R64G64_UINT &&
+         format <= VK_FORMAT_R64G64_SFLOAT)) {
+        return 16;
+    }
+
+    // TODO Handle compressed formats?
+
+    // TODO Handle plane formats?
+
+    return 0;
+}

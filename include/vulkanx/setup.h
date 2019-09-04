@@ -175,6 +175,19 @@ VkFormat vkxGetDepthFormat(VkPhysicalDevice physicalDevice);
  */
 VkFormat vkxGetDepthStencilFormat(VkPhysicalDevice physicalDevice);
 
+/**
+ * @brief Get format texel size in bytes.
+ *
+ * @param[in] format
+ * Format.
+ *
+ * @note
+ * For the time being, the implementation handles uncompressed color
+ * and depth/stencil formats only. If `format` is a compressed format, 
+ * plane format, or extension format, the implementation returns `0`.
+ */
+uint32_t vkxGetFormatTexelSize(VkFormat format);
+
 /**@}*/
 
 #ifdef __cplusplus
