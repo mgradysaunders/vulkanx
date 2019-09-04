@@ -88,6 +88,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gac9cc4d5833bfdd2b77c62e7edc9a729f"><td class="memItemLeft" align="right" valign="top">VkFormat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__setup.html#gac9cc4d5833bfdd2b77c62e7edc9a729f">vkxGetDepthStencilFormat</a> (VkPhysicalDevice physicalDevice)</td></tr>
 <tr class="memdesc:gac9cc4d5833bfdd2b77c62e7edc9a729f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get supported depth/stencil format.  <a href="#gac9cc4d5833bfdd2b77c62e7edc9a729f">More...</a><br /></td></tr>
 <tr class="separator:gac9cc4d5833bfdd2b77c62e7edc9a729f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7fdc78d18a20cfdd2cbc973c62e74285"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__setup.html#ga7fdc78d18a20cfdd2cbc973c62e74285">vkxGetFormatTexelSize</a> (VkFormat format)</td></tr>
+<tr class="memdesc:ga7fdc78d18a20cfdd2cbc973c62e74285"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get format texel size in bytes.  <a href="#ga7fdc78d18a20cfdd2cbc973c62e74285">More...</a><br /></td></tr>
+<tr class="separator:ga7fdc78d18a20cfdd2cbc973c62e74285"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p><code>&lt;vulkanx/setup.h&gt;</code> </p>
@@ -377,6 +380,33 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="ga7fdc78d18a20cfdd2cbc973c62e74285"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7fdc78d18a20cfdd2cbc973c62e74285">&#9670;&nbsp;</a></span>vkxGetFormatTexelSize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t vkxGetFormatTexelSize </td>
+          <td>(</td>
+          <td class="paramtype">VkFormat&#160;</td>
+          <td class="paramname"><em>format</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get format texel size in bytes. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>Format.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>For the time being, the implementation handles uncompressed color and depth/stencil formats only. If <code>format</code> is a compressed format, plane format, or extension format, the implementation returns <code>0</code>. </dd></dl>
 
 </div>
 </div>
