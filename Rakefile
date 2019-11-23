@@ -9,7 +9,6 @@ DIR = OpenStruct.new
 DIR.include = "include"
 DIR.src = "src"
 DIR.bin = "bin"
-DIR.build = "bin/build"
 
 # Globs.
 GLOBS = OpenStruct.new
@@ -23,13 +22,6 @@ GLOBS.all = [
     *GLOBS.all_c
 ]
 
-# Relevant files.
-FILES = OpenStruct.new
-FILES.h = Rake::FileList.new(*GLOBS.all_h)
-FILES.c = Rake::FileList.new(*GLOBS.all_c)
-FILES.o = FILES.c.pathmap "%{^#{DIR.src},#{DIR.build}}X.o"
-FILES.o_debug = FILES.o.pathmap "%X-debug.o"
-
 # Prompt yes/no question.
 def yes? str, ans
     ans = ans.downcase[0]
@@ -42,48 +34,6 @@ def yes? str, ans
     res = STDIN.gets.strip.downcase[0]
     ans = res unless res == nil
     return ans == "y"
-end
-
-# Get source filename from object filename.
-def get_srcfname_from_objfname objfname
-    FILES.c.detect do |srcfname|
-        srcfname.ext("") ==
-        objfname.pathmap("%{^#{DIR.build},#{DIR.src}}X")
-                .sub(/-debug$/, "")
-    end
-end
-
-# Get all include filenames from source filename.
-def get_incfnames_from_srcfname srcfname
-    reg = /^#include[ \t]*(<[^>]+>|"[^"]+")[ \t]*$/
-    arr = []
-    dir1 = DIR.include
-    dir2 = DIR.src
-    File.read(srcfname).each_line do |line|
-        if match = line.match(reg)
-            if File.exist?(incfname1 = File.join(dir1, match[1][1..-2]))
-                arr.push incfname1
-                arr.push *get_incfnames_from_srcfname(incfname1)
-                next # Include directory takes precedent.
-            end
-            if File.exist?(incfname2 = File.join(dir2, match[1][1..-2]))
-                arr.push incfname2
-                arr.push *get_incfnames_from_srcfname(incfname2)
-            end
-        end
-    end
-    arr.uniq
-end
-
-# Get all include filenames from object filename.
-def get_incfnames_from_objfname objfname
-    get_incfnames_from_srcfname get_srcfname_from_objfname(objfname)
-end
-
-# Get all source filenames from object filename.
-def get_srcfnames_from_objfname objfname
-    [get_srcfname_from_objfname(objfname),
-        *get_incfnames_from_objfname(objfname)]
 end
 
 # Get include guard from include filename.
@@ -105,10 +55,9 @@ end
 
 # Default task.
 desc "Default task."
-task :default => [
-    File.join(DIR.bin, "lib#{PROJECT}.a"),
-    File.join(DIR.bin, "lib#{PROJECT}-debug.a")
-]
+task :default do
+    # nothing
+end
 
 # Doxygen.
 namespace :doxygen do
@@ -261,55 +210,3 @@ HPP
         puts "Project has #{lines_total} lines in total."
     end
 end # namespace :source
-
-# Compiler variables.
-CC = OpenStruct.new
-CC.cc = "gcc"
-CC.ccflags = []
-CC.ccflags << "-Wall"
-CC.ccflags << "-Wextra"
-CC.ccflags << "-march=native"
-CC.ccflags << "-mtune=native"
-CC.ccflags << "-I#{DIR.include}"
-CC.ccflags << "-I#{DIR.src}" if DIR.src != DIR.include
-CC.ccflags_debug = CC.ccflags.clone
-CC.ccflags_debug << "-g2"
-CC.ccflags_debug = CC.ccflags_debug.join " " # To string.
-CC.ccflags << "-O2"
-CC.ccflags << "-DNDEBUG"
-CC.ccflags = CC.ccflags.join " " # To string.
-
-# Build static library.
-file "#{File.join(DIR.bin, 
-            "lib#{PROJECT}.a")}" => FILES.o do
-    mkdir_p DIR.bin
-    sh "ar rcs #{File.join(DIR.bin, "lib#{PROJECT}.a")} #{FILES.o}"
-end
-
-# Build static library for debugging.
-file "#{File.join(DIR.bin, 
-            "lib#{PROJECT}-debug.a")}" => FILES.o_debug do
-    mkdir_p DIR.bin
-    sh "ar rcs #{File.join(DIR.bin, "lib#{PROJECT}-debug.a")} #{FILES.o_debug}"
-end
-
-# Build object file.
-rule ".o" => [*->(fname){get_srcfnames_from_objfname(fname)}] do |task|
-    mkdir_p task.name.pathmap("%d")
-    cc = CC.cc
-    ccflags = CC.ccflags
-    ccflags = CC.ccflags_debug if task.name.pathmap("%X").match(/-debug$/)
-    sh "#{cc} #{ccflags} -c #{task.source} -o #{task.name}"
-end
-
-# Remove build.
-desc "Remove #{DIR.build}."
-task :clean do 
-    sh "rm -r -f #{DIR.build}"
-end
-
-# Remove bin.
-desc "Remove #{DIR.bin}."
-task :clobber do
-    sh "rm -r -f #{DIR.bin}"
-end
