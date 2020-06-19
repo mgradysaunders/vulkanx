@@ -1,7 +1,6 @@
 ---
-layout: page
+layout: home
 title: vulkanx
-subtitle: Vulkan extras
 ---
 
 Refer to the [doxygen][1]-generated [API documentation][2] for 
