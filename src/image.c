@@ -303,7 +303,7 @@ VkResult vkxCreateDefaultImageView(
             "Invalid assumption");
 
     // View type.
-    VkImageViewType viewType = pImageCreateInfo->imageType;
+    VkImageViewType viewType = (VkImageViewType)pImageCreateInfo->imageType;
     // Is cube compatible with multiple of 6 array layers?
     if ((pImageCreateInfo->flags & VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT) &&
          pImageCreateInfo->arrayLayers % 6 == 0) {
