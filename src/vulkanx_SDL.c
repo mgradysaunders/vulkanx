@@ -158,7 +158,6 @@ void vkxCreateSDLWindowOrExit(
         if (pLayersEnabled[layerIndex] == VK_TRUE) {
             pWindow->ppEnabledLayerNames[pWindow->enabledLayerCount] =
                      strdup(ppLayerNames[layerIndex]);
-            fprintf(stderr, "\"%s\"\n", ppLayerNames[layerIndex]);
             pWindow->enabledLayerCount++;
         }
     }
@@ -172,7 +171,6 @@ void vkxCreateSDLWindowOrExit(
         if (pExtensionsEnabled[extensionIndex] == VK_TRUE) {
             pWindow->ppEnabledExtensionNames[pWindow->enabledExtensionCount] =
                      strdup(ppExtensionNames[extensionIndex]);
-            fprintf(stderr, "\"%s\"\n", ppExtensionNames[extensionIndex]);
             pWindow->enabledExtensionCount++;
             continue; // Skip ahead.
         }
