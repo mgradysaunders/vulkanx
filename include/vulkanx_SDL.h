@@ -76,6 +76,15 @@ typedef struct VkxSDLWindow_
 
     /** @brief The Vulkan swapchain. */
     VkxSwapchain swapchain;
+
+    /** @brief The Vulkan swapchain image indices. */
+    uint32_t* pSwapchainIndices;
+
+    /** @brief The Vulkan swapchain semaphores. */
+    VkSemaphore* pSwapchainAvailableSemaphores;
+
+    /** @brief The active Vulkan swapchain semaphore. */
+    VkSemaphore swapchainAvailableSemaphore;
 }
 VkxSDLWindow;
 
@@ -115,6 +124,10 @@ void vkxCreateSDLWindowOrExit(
  * @brief Destroy SDL window.
  */
 void vkxDestroySDLWindow(VkxSDLWindow* pWindow);
+
+VkResult vkxSDLWindowAcquireNextImage(VkxSDLWindow* pWindow, uint64_t timeout);
+
+VkResult vkxSDLWindowPresent(VkxSDLWindow* pWindow);
 
 /**@}*/
 

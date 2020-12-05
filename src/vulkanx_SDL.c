@@ -273,6 +273,47 @@ void vkxCreateSDLWindowOrExit(
             exit(EXIT_FAILURE);
         }
     }
+
+    pWindow->pSwapchainIndices = 
+        (uint32_t*)malloc(
+                sizeof(uint32_t) * pWindow->swapchain.imageCount);
+    for (uint32_t imageIndex = 0; imageIndex < pWindow->swapchain.imageCount;
+                  imageIndex++) {
+        pWindow->pSwapchainIndices[imageIndex] = pWindow->swapchain.imageCount;
+    }
+
+    pWindow->pSwapchainAvailableSemaphores = 
+        (VkSemaphore*)malloc(
+                sizeof(VkSemaphore) * pWindow->swapchain.imageCount);
+    memset(pWindow->pSwapchainAvailableSemaphores, 0,
+                sizeof(VkSemaphore) * pWindow->swapchain.imageCount);
+
+    VkSemaphoreCreateInfo semaphoreCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0
+    };
+    for (uint32_t imageIndex = 0; imageIndex < pWindow->swapchain.imageCount;
+                  imageIndex++) {
+        VkResult result = vkCreateSemaphore(
+                pWindow->device.device,
+                &semaphoreCreateInfo, NULL,
+                &pWindow->pSwapchainAvailableSemaphores[imageIndex]);
+        if (result != VK_SUCCESS) {
+            fprintf(stderr, "failed to create swapchain semaphores\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    {
+        VkResult result = vkCreateSemaphore(
+                pWindow->device.device,
+                &semaphoreCreateInfo, NULL,
+                &pWindow->swapchainAvailableSemaphore);
+        if (result != VK_SUCCESS) {
+            fprintf(stderr, "failed to create swapchain semaphores\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 }
 
 void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
@@ -289,6 +330,20 @@ void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
                       nameIndex < pWindow->enabledExtensionCount; nameIndex++)
             free(pWindow->ppEnabledExtensionNames[nameIndex]);
         free(pWindow->ppEnabledExtensionNames);
+
+        // Free swapchain semaphores and indices.
+        for (uint32_t imageIndex = 0; 
+                      imageIndex < pWindow->swapchain.imageCount; imageIndex++)
+            vkDestroySemaphore(
+                    pWindow->device.device, 
+                    pWindow->pSwapchainAvailableSemaphores[imageIndex],
+                    NULL);
+        vkDestroySemaphore(
+                pWindow->device.device, 
+                pWindow->swapchainAvailableSemaphore,
+                NULL);
+        free(pWindow->pSwapchainAvailableSemaphores);
+        free(pWindow->pSwapchainIndices);
 
         // Destroy swapchain.
         vkxDestroySwapchain(
@@ -310,4 +365,52 @@ void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
         // Nullify.
         memset(pWindow, 0, sizeof(VkxSDLWindow));
     }
+}
+
+VkResult vkxSDLWindowAcquireNextImage(VkxSDLWindow* pWindow, uint64_t timeout)
+{
+    uint32_t nextImageIndex = 0;
+    VkResult result = vkAcquireNextImageKHR(
+            pWindow->device.device,
+            pWindow->swapchain.swapchain,
+            timeout,
+            pWindow->swapchainAvailableSemaphore,
+            VK_NULL_HANDLE, &nextImageIndex);
+    if (result == VK_SUCCESS) {
+        // Swap semaphores.
+        VkSemaphore* semaphore1 = &pWindow->swapchainAvailableSemaphore;
+        VkSemaphore* semaphore2 = 
+                &pWindow->pSwapchainAvailableSemaphores[nextImageIndex];
+        VkSemaphore tmp = *semaphore1;
+        *semaphore1 = *semaphore2;
+        *semaphore2 = tmp;
+
+        // Shuffle indices.
+        uint32_t imageCount = pWindow->swapchain.imageCount;
+        for (uint32_t imageIndex = 1; imageIndex < imageCount; 
+                      imageIndex++) {
+            pWindow->pSwapchainIndices[imageIndex] =  
+            pWindow->pSwapchainIndices[imageIndex - 1];
+        }
+        pWindow->pSwapchainIndices[0] = nextImageIndex;
+    }
+
+    return result;
+}
+
+VkResult vkxSDLWindowPresent(VkxSDLWindow* pWindow)
+{
+    VkPresentInfoKHR presentInfo = {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .pNext = NULL,
+        .waitSemaphoreCount = 0,
+        .pWaitSemaphores = NULL, // TODO
+        .swapchainCount = 1,
+        .pSwapchains = &pWindow->swapchain.swapchain,
+        .pImageIndices = pWindow->pSwapchainIndices,
+        .pResults = NULL
+    };
+
+    return vkQueuePresentKHR(
+            pWindow->device.pQueueFamilies[0].pQueues[0], &presentInfo);
 }
