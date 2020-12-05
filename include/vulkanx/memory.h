@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 M. Grady Saunders
+/* Copyright (c) 2019-20 M. Grady Saunders
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,7 +25,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*+-+*/
+/*-*-*-*-*-*-*/
 #pragma once
 #ifndef VULKANX_MEMORY_H
 #define VULKANX_MEMORY_H
@@ -60,6 +60,8 @@ extern "C" {
  * to `__builtin_alloca` to allocate on the stack. 
  */
 #define VKX_LOCAL_MALLOC VKX_LOCAL_MALLOC_
+
+#define VKX_LOCAL_MALLOC_TYPE(T, n) (T*)VKX_LOCAL_MALLOC(sizeof(T) * (n))
 
 #if !DOXYGEN
 #if defined(__GNUC__)

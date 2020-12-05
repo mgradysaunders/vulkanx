@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 M. Grady Saunders
+/* Copyright (c) 2019-20 M. Grady Saunders
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,7 +25,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*+-+*/
+/*-*-*-*-*-*-*/
 #pragma once
 #ifndef VULKANX_SETUP_H
 #define VULKANX_SETUP_H
@@ -44,62 +44,83 @@ extern "C" {
 /**@{*/
 
 /**
+ * @brief Instance create info.
+ */
+typedef struct VkxInstanceCreateInfo_
+{
+    /** @brief Application name. */
+    const char* pApplicationName;
+
+    /** @brief Application version, from `VK_MAKE_VERSION`. */
+    uint32_t applicationVersion;
+
+    /** @brief Engine name. */
+    const char* pEngineName;
+
+    /** @brief Engine version, from `VK_MAKE_VERSION`. */
+    uint32_t engineVersion;
+
+    /** @brief API version. */
+    uint32_t apiVersion;
+
+    /** @brief Requested instance layer count. */
+    uint32_t requestedLayerCount;
+
+    /** @brief Requested instance layer names. */
+    const char* const* ppRequestedLayerNames;
+
+    /** @brief Requested instance extension count. */
+    uint32_t requestedExtensionCount;
+
+    /** @brief Requested instance extension names. */
+    const char* const* ppRequestedExtensionNames;
+}
+VkxInstanceCreateInfo;
+
+/**
  * @brief Create instance.
  *
- * @param[in] pApplicationName
- * Application name.
- *
- * @param[in] applicationVersion
- * Application version, from `VK_MAKE_VERSION`.
- *
- * @param[in] pEngineName
- * Engine name.
- *
- * @param[in] engineVersion
- * Engine version, from `VK_MAKE_VERSION`.
- *
- * @param[in] apiVersion
- * API version.
- *
- * @param[in] requestedLayerCount
- * Requested instance layer count.
- *
- * @param[in] ppRequestedLayerNames
- * Requested instance layer names. 
- *
- * @param[in] requestedExtensionCount
- * Requested instance extension count.
- *
- * @param[in] ppRequestedExtensionNames
- * Requested instance extension names.
+ * @param[in] pCreateInfo
+ * Create info.
  *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
  * @param[out] pRequestedLayersEnabled
- * _Optional_. Booleans to indicate which requested layers were enabled.
+ * _Optional_. Booleans to indicate which requested extensions were enabled.
  *
  * @param[out] pRequestedExtensionsEnabled
- * _Optional_. Booleans to indicate which requested extensions were enabled.
+ * _Optional_. Booleans to indicate which requested layers were enabled.
  *
  * @param[out] pInstance
  * Instance.
  */
 VkResult vkxCreateInstance(
-            const char* pApplicationName, 
-            uint32_t applicationVersion,
-            const char* pEngineName,
-            uint32_t engineVersion,
-            uint32_t apiVersion,
-            uint32_t requestedLayerCount, 
-            const char* const* ppRequestedLayerNames,
-            uint32_t requestedExtensionCount,
-            const char* const* ppRequestedExtensionNames,
+            const VkxInstanceCreateInfo* pCreateInfo,
             const VkAllocationCallbacks* pAllocator,
             VkBool32* pRequestedLayersEnabled,
             VkBool32* pRequestedExtensionsEnabled,
             VkInstance* pInstance)
-                __attribute__((nonnull(13)));
+                __attribute__((nonnull(1, 5)));
+
+/**
+ * @brief Physical device select info.
+ */
+typedef struct VkxPhysicalDeviceSelectInfo_
+{
+    /** @brief _Optional_. Requested name. */
+    const char* pRequestedName;
+
+    /** @brief _Optional_. Requested features. */
+    const VkPhysicalDeviceFeatures* pRequestedFeatures;
+
+    /** @brief _Optional_. Is physical device okay for selection? */
+    VkBool32 (*pIsPhysicalDeviceOkay)(VkPhysicalDevice, void*);
+
+    /** @brief _Optional_. User data for callback. */
+    void* pUserData;
+}
+VkxPhysicalDeviceSelectInfo;
 
 /**
  * @brief Select physical device.
@@ -107,24 +128,12 @@ VkResult vkxCreateInstance(
  * @param[in] instance
  * Instance.
  *
- * @param[in] pRequestedName
- * _Optional_. Requested device name.
- *
- * @param[in] pRequestedFeatures
- * _Optional_. Requested device features.
- *
- * @param[in] isPhysicalDeviceOkay
- * Is physical device okay?
- *
- * @param[in] pUserData
- * User data.
+ * @param[in] pSelectInfo
+ * _Optional_. Select info.
  */
 VkPhysicalDevice vkxSelectPhysicalDevice(
             VkInstance instance,
-            const char* pRequestedName,
-            const VkPhysicalDeviceFeatures* pRequestedFeatures,
-            VkBool32 (*isPhysicalDeviceOkay)(VkPhysicalDevice, void*),
-            void* pUserData);
+            const VkxPhysicalDeviceSelectInfo* pSelectInfo);
 
 /**
  * @brief Select format.
@@ -187,6 +196,113 @@ VkFormat vkxGetDepthStencilFormat(VkPhysicalDevice physicalDevice);
  * plane format, or extension format, the implementation returns `0`.
  */
 uint32_t vkxGetFormatTexelSize(VkFormat format);
+
+/**
+ * @brief Device queue family.
+ */
+typedef struct VkxDeviceQueueFamily_
+{
+    /** @brief Queue flags. */
+    VkQueueFlags queueFlags;
+
+    /** @brief Queue family properties. */
+    VkQueueFamilyProperties queueFamilyProperties;
+
+    /** @brief Queue family index. */
+    uint32_t queueFamilyIndex;
+
+    /** @brief Queue count. */
+    uint32_t queueCount;
+
+    /** @brief Queues. */
+    VkQueue* pQueues;
+
+    /** @brief Queue priorities. */
+    float* pQueuePriorities;
+}
+VkxDeviceQueueFamily;
+
+/**
+ * @brief Device queue family create info.
+ */
+typedef struct VkxDeviceQueueFamilyCreateInfo_
+{
+    /** @brief Required queue flags. */
+    VkQueueFlags queueFlags;
+
+    /** @brief Queue count. */
+    uint32_t queueCount;
+
+    /** @brief Minimum queue count. */
+    uint32_t minQueueCount;
+
+    /** @brief If creating many queues, use equal or inequal priority? */
+    VkBool32 useEqualPriority;
+
+    /** @brief Surface for present operations, or `VK_NULL_HANDLE`. */
+    VkSurfaceKHR presentSurface;
+}
+VkxDeviceQueueFamilyCreateInfo;
+
+/**
+ * @brief Device.
+ */
+typedef struct VkxDevice_
+{
+    /** @brief Physical device. */
+    VkPhysicalDevice physicalDevice;
+
+    /** @brief Physical device features. */
+    VkPhysicalDeviceFeatures* pPhysicalDeviceFeatures;
+
+    /** @brief Logical device. */
+    VkDevice device;
+
+    /** @brief Queue family count. */
+    uint32_t queueFamilyCount;
+
+    /** @brief Queue families. */
+    VkxDeviceQueueFamily* pQueueFamilies;
+}
+VkxDevice;
+
+/**
+ * @brief Device create info.
+ */
+typedef struct VkxDeviceCreateInfo_
+{
+    /** @brief _Optional_. Physical device select info. */
+    const VkxPhysicalDeviceSelectInfo* pSelectInfo;
+
+    /** @brief Queue family create info count. */
+    uint32_t queueFamilyCreateInfoCount;
+
+    /** @brief Queue family create infos. */
+    const VkxDeviceQueueFamilyCreateInfo* pQueueFamilyCreateInfos;
+
+    /** @brief _Optional_. Enabled extension count. */
+    uint32_t enabledExtensionCount;
+
+    /** @brief _Optional_. Enabled extension names. */
+    const char* const* ppEnabledExtensionNames;
+}
+VkxDeviceCreateInfo;
+
+/**
+ * @brief Create device.
+ */
+VkResult vkxCreateDevice(
+            VkInstance instance,
+            const VkxDeviceCreateInfo* pCreateInfo,
+            const VkAllocationCallbacks* pAllocator,
+            VkxDevice* pDevice);
+
+/**
+ * @brief Destroy device.
+ */
+void vkxDestroyDevice(
+            VkxDevice* pDevice, 
+            const VkAllocationCallbacks* pAllocator);
 
 /**@}*/
 

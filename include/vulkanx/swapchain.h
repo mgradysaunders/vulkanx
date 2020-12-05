@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 M. Grady Saunders
+/* Copyright (c) 2019-20 M. Grady Saunders
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,7 +25,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*+-+*/
+/*-*-*-*-*-*-*/
 #pragma once
 #ifndef VULKANX_SWAPCHAIN_H
 #define VULKANX_SWAPCHAIN_H
@@ -53,44 +53,28 @@ typedef struct VkxSwapchain_
      */
     /**@{*/
 
-    /**
-     * @brief Present mode.
-     */
+    /** @brief Present mode. */
     VkPresentModeKHR presentMode;
 
-    /**
-     * @brief Surface format.
-     */
+    /** @brief Surface format. */
     VkSurfaceFormatKHR surfaceFormat;
 
-    /**
-     * @brief Pre-transform.
-     */
+    /** @brief Pre-transform. */
     VkSurfaceTransformFlagBitsKHR preTransform;
 
-    /**
-     * @brief Composite alpha.
-     */
+    /** @brief Composite alpha. */
     VkCompositeAlphaFlagBitsKHR compositeAlpha;
 
-    /**
-     * @brief Image usage flags.
-     */
+    /** @brief Image usage flags. */
     VkImageUsageFlags imageUsage;
 
-    /**
-     * @brief Queue family index count.
-     */
+    /** @brief Queue family index count. */
     uint32_t queueFamilyIndexCount;
 
-    /**
-     * @brief Queue family indices.
-     */
+    /** @brief Queue family indices. */
     uint32_t queueFamilyIndices[2];
 
-    /**
-     * @brief Image sharing mode.
-     */
+    /** @brief Image sharing mode. */
     VkSharingMode imageSharingMode;
 
     /**@}*/
@@ -100,29 +84,19 @@ typedef struct VkxSwapchain_
      */
     /**@{*/
 
-    /**
-     * @brief Swapchain.
-     */
+    /** @brief Swapchain. */
     VkSwapchainKHR swapchain;
 
-    /**
-     * @brief Image extent.
-     */
+    /** @brief Image extent. */
     VkExtent2D imageExtent;
 
-    /**
-     * @brief Image count.
-     */
+    /** @brief Image count. */
     uint32_t imageCount;
 
-    /**
-     * @brief Images.
-     */
+    /** @brief Images. */
     VkImage* pImages;
 
-    /**
-     * @brief Image views.
-     */
+    /** @brief Image views. */
     VkImageView* pImageViews;
 
     /**@}*/

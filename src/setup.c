@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 M. Grady Saunders
+/* Copyright (c) 2019-20 M. Grady Saunders
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,7 +25,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-/*+-+*/
+/*-*-*-*-*-*-*/
 #include <assert.h>
 #include <string.h>
 #include <vulkanx/result.h>
@@ -34,21 +34,19 @@
 
 // Create instance.
 VkResult vkxCreateInstance(
-            const char* pApplicationName, 
-            uint32_t applicationVersion,
-            const char* pEngineName,
-            uint32_t engineVersion,
-            uint32_t apiVersion,
-            uint32_t requestedLayerCount, 
-            const char* const* ppRequestedLayerNames,
-            uint32_t requestedExtensionCount,
-            const char* const* ppRequestedExtensionNames,
+            const VkxInstanceCreateInfo* pCreateInfo,
             const VkAllocationCallbacks* pAllocator,
             VkBool32* pRequestedLayersEnabled,
             VkBool32* pRequestedExtensionsEnabled,
             VkInstance* pInstance)
 {
     assert(pInstance);
+    uint32_t requestedLayerCount = pCreateInfo->requestedLayerCount;
+    const char* const* ppRequestedLayerNames = 
+          pCreateInfo->ppRequestedLayerNames;
+    uint32_t requestedExtensionCount = pCreateInfo->requestedExtensionCount;
+    const char* const* ppRequestedExtensionNames = 
+          pCreateInfo->ppRequestedExtensionNames;
 
     // Allocate layer properties.
     uint32_t layerPropertyCount = 0;
@@ -166,11 +164,11 @@ VkResult vkxCreateInstance(
     VkApplicationInfo applicationInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = NULL,
-        .pApplicationName = pApplicationName,
-        .applicationVersion = applicationVersion,
-        .pEngineName = pEngineName,
-        .engineVersion = engineVersion,
-        .apiVersion = apiVersion
+        .pApplicationName = pCreateInfo->pApplicationName,
+        .applicationVersion = pCreateInfo->applicationVersion,
+        .pEngineName = pCreateInfo->pEngineName,
+        .engineVersion = pCreateInfo->engineVersion,
+        .apiVersion = pCreateInfo->apiVersion
     };
     VkInstanceCreateInfo instanceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -200,6 +198,15 @@ VkResult vkxCreateInstance(
     VKX_LOCAL_FREE(pLayerProperties);
 
     return result;
+}
+
+// Is physical device okay?
+static VkBool32 isPhysicalDeviceOkayDefault(
+                VkPhysicalDevice physicalDevice, void* pUserData)
+{
+    (void)physicalDevice;
+    (void)pUserData;
+    return VK_TRUE; // Yes, by default.
 }
 
 // Is physical device less?
@@ -386,11 +393,21 @@ static VkBool32 isPhysicalDeviceLess(
 // Select physical device.
 VkPhysicalDevice vkxSelectPhysicalDevice(
             VkInstance instance,
-            const char* pRequestedName,
-            const VkPhysicalDeviceFeatures* pRequestedFeatures,
-            VkBool32 (*isPhysicalDeviceOkay)(VkPhysicalDevice, void*),
-            void* pUserData)
+            const VkxPhysicalDeviceSelectInfo* pSelectInfo)
 {
+    const char* pRequestedName = NULL;
+    const VkPhysicalDeviceFeatures* pRequestedFeatures = NULL;
+    VkBool32 (*pIsPhysicalDeviceOkay)(VkPhysicalDevice, void*) = NULL;
+    void* pUserData = NULL;
+    if (pSelectInfo) {
+        pRequestedName = pSelectInfo->pRequestedName;
+        pRequestedFeatures = pSelectInfo->pRequestedFeatures;
+        pIsPhysicalDeviceOkay = pSelectInfo->pIsPhysicalDeviceOkay;
+        pUserData = pSelectInfo->pUserData;
+    }
+    if (pIsPhysicalDeviceOkay == NULL)
+        pIsPhysicalDeviceOkay = isPhysicalDeviceOkayDefault;
+
     // Allocate physical devices.
     uint32_t physicalDeviceCount = 0;
     VkPhysicalDevice* pPhysicalDevices = NULL;
@@ -427,7 +444,7 @@ VkPhysicalDevice vkxSelectPhysicalDevice(
             if (strcmp(properties.deviceName, pRequestedName) == 0) {
 
                 // Okay?
-                if (isPhysicalDeviceOkay(thisPhysicalDevice, pUserData)) {
+                if (pIsPhysicalDeviceOkay(thisPhysicalDevice, pUserData)) {
                     bestPhysicalDevice = thisPhysicalDevice;
                 }
             }
@@ -440,7 +457,7 @@ VkPhysicalDevice vkxSelectPhysicalDevice(
                       index < physicalDeviceCount; index++) {
             // Update best device if better device is found.
             VkPhysicalDevice thisPhysicalDevice = pPhysicalDevices[index];
-            if (isPhysicalDeviceOkay(thisPhysicalDevice, pUserData) &&
+            if (pIsPhysicalDeviceOkay(thisPhysicalDevice, pUserData) &&
                 isPhysicalDeviceLess(bestPhysicalDevice, thisPhysicalDevice, 
                     pRequestedFeatures)) {
                 bestPhysicalDevice = thisPhysicalDevice;
@@ -620,4 +637,336 @@ uint32_t vkxGetFormatTexelSize(VkFormat format)
     // TODO Handle plane formats?
 
     return 0;
+}
+
+// Queue family supports given create info?
+static VkBool32 queueFamilySupportsCreateInfo(
+            VkPhysicalDevice physicalDevice,
+            uint32_t familyIndex,
+            const VkQueueFamilyProperties* pProperties,
+            const VkxDeviceQueueFamilyCreateInfo* pCreateInfo) 
+{
+    if (pCreateInfo->presentSurface != VK_NULL_HANDLE) {
+        VkBool32 supported = VK_FALSE;
+        VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(
+                physicalDevice, familyIndex, pCreateInfo->presentSurface,
+                &supported);
+        if (result != VK_SUCCESS || supported == VK_FALSE) {
+            return VK_FALSE;
+        }
+    }
+    return pProperties->queueCount >= pCreateInfo->minQueueCount &&
+          (pProperties->queueFlags & pCreateInfo->queueFlags) ==
+                                     pCreateInfo->queueFlags;
+}
+
+// Find queue family that supports given create info.
+static uint32_t findQueueFamilyForCreateInfo(
+            VkPhysicalDevice physicalDevice,
+            uint32_t propertyCount,
+            const VkQueueFamilyProperties* pProperties,
+            const VkxDeviceQueueFamilyCreateInfo** ppCreateInfosUsed,
+            const VkxDeviceQueueFamilyCreateInfo* pCreateInfo,
+            uint32_t depth)
+{
+    for (uint32_t propertyIndex = 0; propertyIndex < propertyCount;
+                  propertyIndex++) {
+        // Queue family already used?
+        if (ppCreateInfosUsed[propertyIndex]) {
+            // Skip for now.
+            continue;
+        }
+
+        // Found an unused queue family that supports create info?
+        if (queueFamilySupportsCreateInfo(
+                    physicalDevice, propertyIndex,
+                    &pProperties[propertyIndex], pCreateInfo)) {
+            // Mark it as used, return property index.
+            ppCreateInfosUsed[propertyIndex] = pCreateInfo;
+            return propertyIndex;
+        }
+    }
+
+    if (depth == 0) {
+        for (uint32_t propertyIndex = 0; propertyIndex < propertyCount;
+                      propertyIndex++) {
+            if (ppCreateInfosUsed[propertyIndex] == pCreateInfo) {
+                continue;
+            }
+            // Found a used queue family that supports create info?
+            if (queueFamilySupportsCreateInfo(
+                        physicalDevice, propertyIndex,
+                        &pProperties[propertyIndex], pCreateInfo)) {
+                // Try to find somewhere else to put the create info 
+                // for this family.
+                uint32_t otherIndex = findQueueFamilyForCreateInfo(
+                        physicalDevice,
+                        propertyCount,
+                        pProperties,
+                        ppCreateInfosUsed,
+                        ppCreateInfosUsed[propertyIndex],
+                        depth + 1);
+                if (otherIndex != UINT32_MAX) {
+                    // Move it there, put current create info here.
+                    ppCreateInfosUsed[otherIndex] = 
+                    ppCreateInfosUsed[propertyIndex];
+                    ppCreateInfosUsed[propertyIndex] = pCreateInfo;
+                    return propertyIndex;
+                }
+            }
+        }
+    }
+
+    // Nothing found.
+    return UINT32_MAX;
+}
+
+// Find queue family for each create info.
+static VkBool32 findQueueFamilyForEachCreateInfo(
+            VkPhysicalDevice physicalDevice,
+            uint32_t createInfoCount,
+            const VkxDeviceQueueFamilyCreateInfo* pCreateInfos,
+            VkDeviceQueueCreateInfo* pOutputCreateInfos,
+            VkxDeviceQueueFamily* pFamilies)
+{
+    // Queue family properties.
+    uint32_t propertyCount = 0;
+    VkQueueFamilyProperties* pProperties = NULL;
+    vkGetPhysicalDeviceQueueFamilyProperties(
+            physicalDevice, &propertyCount, NULL);
+    pProperties = 
+            VKX_LOCAL_MALLOC_TYPE(
+            VkQueueFamilyProperties, propertyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(
+            physicalDevice, &propertyCount, pProperties);
+
+    // Create-info pointers used for each queue family.
+    const VkxDeviceQueueFamilyCreateInfo** ppCreateInfosUsed = 
+            VKX_LOCAL_MALLOC_TYPE(
+            const VkxDeviceQueueFamilyCreateInfo*, propertyCount);
+    memset(ppCreateInfosUsed, 0, 
+            sizeof(VkxDeviceQueueFamilyCreateInfo*) * propertyCount);
+
+    // Iterate create-infos.
+    for (uint32_t createInfoIndex = 0; createInfoIndex < createInfoCount; 
+                  createInfoIndex++) {
+
+        // Try to find acceptable property index.
+        uint32_t propertyIndex = findQueueFamilyForCreateInfo(
+                physicalDevice,
+                propertyCount,
+                pProperties,
+                ppCreateInfosUsed,
+                pCreateInfos + createInfoIndex, 0);
+
+        // Not found?
+        if (propertyIndex == UINT32_MAX) {
+
+            // Free properties.
+            VKX_LOCAL_FREE(pProperties);
+
+            // Free create-info pointers.
+            VKX_LOCAL_FREE(ppCreateInfosUsed);
+
+            // Failure.
+            return VK_FALSE;
+        }
+    }
+
+    // Iterate create-infos again.
+    for (uint32_t createInfoIndex = 0; createInfoIndex < createInfoCount;
+                  createInfoIndex++) {
+
+        // Find property index used by this create-info.
+        uint32_t propertyIndex;
+        for (propertyIndex = 0; propertyIndex < propertyCount;
+             propertyIndex++) {
+            if (ppCreateInfosUsed[propertyIndex] == 
+                pCreateInfos + createInfoIndex) {
+                break;
+            }
+        }
+
+        // Initialize device queue family.
+        VkxDeviceQueueFamily* pFamily = pFamilies + createInfoIndex;
+
+        // Remember queue flags requested by create info.
+        pFamily->queueFlags = pCreateInfos[createInfoIndex].queueFlags;
+
+        // Remember queue family properties.
+        pFamily->queueFamilyProperties = pProperties[propertyIndex];
+
+        // Remember queue family index.
+        pFamily->queueFamilyIndex = propertyIndex;
+
+        // Limit queue count to requested queue count.
+        pFamily->queueCount = pProperties[propertyIndex].queueCount;
+        if (pFamily->queueCount > pCreateInfos[createInfoIndex].queueCount)
+            pFamily->queueCount = pCreateInfos[createInfoIndex].queueCount;
+
+        // Allocate queues.
+        pFamily->pQueues = 
+                (VkQueue*)malloc(sizeof(VkQueue) * pFamily->queueCount);
+
+        // Allocate queue priorities.
+        pFamily->pQueuePriorities = 
+                (float*)malloc(sizeof(float) * pFamily->queueCount);
+
+        // Use equal priority?
+        if (pCreateInfos[createInfoIndex].useEqualPriority) {
+            // Initialize all equal priorities.
+            for (uint32_t queueIndex = 0; queueIndex < pFamily->queueCount;
+                          queueIndex++) {
+                pFamily->pQueuePriorities[queueIndex] = 1.0f;
+            }
+        }
+        else {
+            // Initialize decreasing priorities from 1 down to 1 / queueCount.
+            for (uint32_t queueIndex = 0; queueIndex < pFamily->queueCount;
+                          queueIndex++) {
+                pFamily->pQueuePriorities[queueIndex] = 
+                    (float)(pFamily->queueCount - queueIndex) /
+                    (float)(pFamily->queueCount);
+            }
+        }
+
+        // Initialize queue create info.
+        VkDeviceQueueCreateInfo queueCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .queueFamilyIndex = pFamily->queueFamilyIndex,
+            .queueCount = pFamily->queueCount,
+            .pQueuePriorities = pFamily->pQueuePriorities
+        };
+        pOutputCreateInfos[createInfoIndex] = queueCreateInfo;
+    }
+
+    // Free properties.
+    VKX_LOCAL_FREE(pProperties);
+
+    // Free create-info pointers.
+    VKX_LOCAL_FREE(ppCreateInfosUsed);
+
+    return VK_TRUE;
+}
+
+VkResult vkxCreateDevice(
+            VkInstance instance,
+            const VkxDeviceCreateInfo* pCreateInfo,
+            const VkAllocationCallbacks* pAllocator,
+            VkxDevice* pDevice)
+{
+    assert(pDevice);
+    memset(pDevice, 0, sizeof(VkxDevice));
+
+    // Select physical device.
+    VkPhysicalDevice physicalDevice = 
+    vkxSelectPhysicalDevice(instance, pCreateInfo->pSelectInfo);
+    if (physicalDevice == VK_NULL_HANDLE) {
+        return VK_ERROR_FORMAT_NOT_SUPPORTED;
+    }
+    pDevice->physicalDevice = physicalDevice;
+    pDevice->pPhysicalDeviceFeatures = 
+        (VkPhysicalDeviceFeatures*)malloc(sizeof(VkPhysicalDeviceFeatures));
+    vkGetPhysicalDeviceFeatures(
+            physicalDevice, pDevice->pPhysicalDeviceFeatures);
+
+    // Queue create infos.
+    uint32_t queueCreateInfoCount = pCreateInfo->queueFamilyCreateInfoCount;
+    VkDeviceQueueCreateInfo* pQueueCreateInfos = 
+            VKX_LOCAL_MALLOC_TYPE(
+            VkDeviceQueueCreateInfo, queueCreateInfoCount);
+
+    // Queue families.
+    pDevice->queueFamilyCount = pCreateInfo->queueFamilyCreateInfoCount;
+    pDevice->pQueueFamilies = 
+        (VkxDeviceQueueFamily*)malloc(
+                sizeof(VkxDeviceQueueFamily) * pDevice->queueFamilyCount);
+    memset(pDevice->pQueueFamilies, 0,
+                sizeof(VkxDeviceQueueFamily) * pDevice->queueFamilyCount);
+
+    if (!findQueueFamilyForEachCreateInfo(
+            physicalDevice,
+            pCreateInfo->queueFamilyCreateInfoCount,
+            pCreateInfo->pQueueFamilyCreateInfos,
+            pQueueCreateInfos,
+            pDevice->pQueueFamilies)) {
+        vkxDestroyDevice(pDevice, pAllocator);
+        VKX_LOCAL_FREE(pQueueCreateInfos);
+        return VK_ERROR_INITIALIZATION_FAILED;
+    }
+
+    VkDeviceCreateInfo deviceCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .pNext = NULL,
+        .flags = 0,
+        .queueCreateInfoCount = queueCreateInfoCount,
+        .pQueueCreateInfos = pQueueCreateInfos,
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = NULL,
+        .enabledExtensionCount = pCreateInfo->enabledExtensionCount,
+        .ppEnabledExtensionNames = pCreateInfo->ppEnabledExtensionNames,
+        .pEnabledFeatures = pDevice->pPhysicalDeviceFeatures
+    };
+
+    // Create device.
+    VkResult result = vkCreateDevice(
+            physicalDevice, 
+            &deviceCreateInfo, pAllocator, 
+            &pDevice->device);
+
+    // Free queue create infos.
+    VKX_LOCAL_FREE(pQueueCreateInfos);
+
+    if (result != VK_SUCCESS) {
+        pDevice->device = VK_NULL_HANDLE;
+        vkxDestroyDevice(pDevice, pAllocator);
+        return result;
+    }
+
+    // Get all of the queues.
+    for (uint32_t familyIndex = 0; familyIndex < pDevice->queueFamilyCount;
+                  familyIndex++) {
+        VkxDeviceQueueFamily* pQueueFamily = 
+                    &pDevice->pQueueFamilies[familyIndex];
+        for (uint32_t queueIndex = 0; queueIndex < pQueueFamily->queueCount;
+                      queueIndex++) {
+            vkGetDeviceQueue(
+                    pDevice->device, 
+                    pQueueFamily->queueFamilyIndex, queueIndex,
+                    pQueueFamily->pQueues + queueIndex);
+        }
+    }
+
+    // Success.
+    return VK_SUCCESS;
+}
+
+void vkxDestroyDevice(
+            VkxDevice* pDevice, 
+            const VkAllocationCallbacks* pAllocator)
+{
+    if (pDevice) {
+        // Free physical device features.
+        free(pDevice->pPhysicalDeviceFeatures);
+
+        // Destroy device.
+        vkDestroyDevice(pDevice->device, pAllocator);
+
+        // Free queue family queues and queue priorities.
+        for (uint32_t familyIndex = 0; familyIndex < pDevice->queueFamilyCount;
+                      familyIndex++) {
+            VkxDeviceQueueFamily* pQueueFamily = 
+                        &pDevice->pQueueFamilies[familyIndex];
+            free(pQueueFamily->pQueues);
+            free(pQueueFamily->pQueuePriorities);
+        }
+
+        // Free queue families.
+        free(pDevice->pQueueFamilies);
+
+        // Nullify.
+        memset(pDevice, 0, sizeof(VkxDevice));
+    }
 }
