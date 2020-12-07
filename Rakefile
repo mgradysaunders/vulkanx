@@ -12,15 +12,16 @@ DIR.bin = "bin"
 
 # Globs.
 GLOBS = OpenStruct.new
-GLOBS.include_h = File.join(DIR.include, "**", "*.h")
-GLOBS.src_h = File.join(DIR.src, "**", "*.h")
-GLOBS.src_c = File.join(DIR.src, "**", "*.c")
-GLOBS.all_h = [GLOBS.include_h, GLOBS.src_h]
-GLOBS.all_c = [GLOBS.src_c]
-GLOBS.all = [
-    *GLOBS.all_h, 
-    *GLOBS.all_c
-]
+GLOBS.include_hpp = File.join(DIR.include, "**", "*.hpp")
+GLOBS.include_hpp = File.join(DIR.include, "**", "*")
+GLOBS.src_hpp = File.join(DIR.src, "**", "*.hpp")
+GLOBS.src_cpp = File.join(DIR.src, "**", "*.cpp")
+GLOBS.all_hpp = [GLOBS.include_hpp, GLOBS.src_hpp]
+GLOBS.all_cpp = [GLOBS.src_cpp]
+GLOBS.all = [*GLOBS.all_hpp, 
+             *GLOBS.all_cpp]
+
+LICENSE_LINE = "/*-*-*-*-*-*-*/\n"
 
 # Prompt yes/no question.
 def yes? str, ans
@@ -43,14 +44,15 @@ end
 
 # Get license comment.
 def license_comment
-    comment = "/*"
+    comment = ""
+    comment.concat "/*"
     File.read("LICENSE").each_line do |line|
         comment.concat " "
         comment.concat line
         comment.concat " *"
     end
     comment.concat "/\n"
-    comment.concat "/*+-+*/\n" # Boilerplate separator.
+    comment.concat LICENSE_LINE # Boilerplate separator.
 end
 
 # Default task.
@@ -65,13 +67,29 @@ namespace :doxygen do
     # Run doxygen.
     desc "Run doxygen."
     task :run do
+        sh "rm -rf ./docs-doxygen"
+        sh "doxygen"
         sh "doxygen"
     end
 
+    # Run doxygen and deploy to docs branch.
+    desc "Run doxygen and deploy to docs branch."
+    task :run_and_deploy do
+        sh "rm -rf ./docs-doxygen"
+        sh "doxygen"
+        sh "doxygen"
+        sh "git checkout docs"
+        sh "rm -rf ./doxygen && mv ./docs-doxygen ./doxygen"
+        sh "git add ./doxygen"
+        sh "git commit -m \"rerun doxygen\""
+        sh "git push -u origin docs"
+        sh "git checkout master"
+    end
+
     # Clean doxygen output.
-    desc "Clean doxygen output (remove docs/doxygen/)."
+    desc "Clean doxygen output (remove ./docs-doxygen)."
     task :clean do
-        sh "rm -r -f docs/doxygen"
+        sh "rm -rf ./docs-doxygen"
     end
 
 end # namespace :doxygen
@@ -79,8 +97,8 @@ end # namespace :doxygen
 # Source management.
 namespace :source do
 
-    # Initialize file.
-    desc "Initialize file."
+    # Init file.
+    desc "Init file."
     task :init, [:fname] do |task, args|
 
         # Get filename.
@@ -109,13 +127,12 @@ namespace :source do
             # Open file.
             file = File.open fname, "wb"
 
-            # Dump license comment.
+            # Write license comment.
             file.write license_comment
-            if fname.pathmap("%x") == ".h"
 
-                # Initialize with include guard.
-                incguard = get_incguard_from_incfname(srcfname)
-                file.write <<HPP
+            # Initialize with include guard.
+            incguard = get_incguard_from_incfname(srcfname)
+            file.write <<HPP
 \#pragma once
 \#ifndef #{incguard}
 \#define #{incguard}
@@ -130,26 +147,28 @@ extern "C" {
 
 \#endif // \#ifndef #{incguard}
 HPP
-            end
             file.close
         end
     end
 
-    # Generate files from scripts.
-    desc "Generate files from scripts."
-    task :generate_from_scripts do 
-        for fname in Rake::FileList.new(File.join(DIR.include, "**", "*.rb"))
-            # Open file.
-            file = File.open(fname.pathmap("%X"), "wb")
+    # Generate inline files.
+    desc "Generate inline files from scripts."
+    task :generate_inline do 
+        for fname in Rake::FileList[File.join(DIR.include, "**/*.inl.rb")]
+            file = File.open fname.pathmap("%X"), "wb"
 
-            # Dump warning comment.
-            file.write "// A ruby script generates this file, DO NOT EDIT\n\n"
-
-            # Dump license comment.
+            # Write current license.
             file.write license_comment
 
-            # Delegate.
-            file.write `ruby #{fname}`
+            # Write script output
+            incguard = get_incguard_from_incfname(fname.pathmap("%{^#{DIR.include}/}X"))
+            file.write <<HPP
+\#ifndef #{incguard}
+\#define #{incguard}
+
+#{%x(ruby #{fname})}
+\#endif // \#ifndef #{incguard}
+HPP
 
             # Close.
             file.close
@@ -159,7 +178,10 @@ HPP
     # Update license boilerplate.
     desc "Update license boilerplate."
     task :update_license do |task|
-        for fname in Rake::FileList.new(*GLOBS.all_h)
+        for fname in Rake::FileList.new(*GLOBS.all_hpp)
+            if File.directory? fname
+                next
+            end
 
             # Read file.
             text = File.read fname
@@ -168,12 +190,12 @@ HPP
             file = File.open fname, "wb"
 
             # Omit boilerplate.
-            if /^\/\*\+-\+\*\/$\n/ =~ text
-                text.gsub! /\A.*^\/\*\+-\+\*\/$\n/m, ""
-            end
+            if /^\/\*-\*-\*-\*-\*-\*-\*\/$\n/ =~ text
+                text.gsub! /\A.*^\/\*-\*-\*-\*-\*-\*-\*\/$\n/m, ""
 
-            # Write current license.
-            file.write license_comment
+                # Write current license.
+                file.write license_comment
+            end
 
             # Write everything back, omitting previous license.
             file.write text
@@ -189,6 +211,9 @@ HPP
         lines = 0
         lines_total = 0
         for fname in Rake::FileList.new(*GLOBS.all)
+            if File.directory? fname
+                next
+            end
 
             # Read file.
             text = File.read fname
@@ -199,8 +224,8 @@ HPP
             text.gsub! /^\s*$\n/, ""
 
             # Omit boilerplate.
-            if /^\/\*\+-\+\*\/$\n/ =~ text
-                text.gsub! /\A.*^\/\*\+-\+\*\/$\n/m, ""
+            if /^\/\*-\*-\*-\*-\*-\*-\*\/$\n/ =~ text
+                text.gsub! /\A.*^\/\*-\*-\*-\*-\*-\*-\*\/$\n/m, ""
             end
 
             # Add lines.
@@ -209,4 +234,4 @@ HPP
         puts "Project has #{lines} non-blank lines, not including boilerplate."
         puts "Project has #{lines_total} lines in total."
     end
-end # namespace :source
+end
