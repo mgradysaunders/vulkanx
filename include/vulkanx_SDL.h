@@ -80,11 +80,15 @@ typedef struct VkxSDLWindow_
     /** @brief The Vulkan swapchain image indices. */
     uint32_t* pSwapchainIndices;
 
+    /** @brief The Vulkan swapchain framebuffers. */
+    VkFramebuffer* pSwapchainFramebuffers; // TODO
+
     /** @brief The Vulkan swapchain semaphores. */
     VkSemaphore* pSwapchainAvailableSemaphores;
 
     /** @brief The active Vulkan swapchain semaphore. */
     VkSemaphore swapchainAvailableSemaphore;
+
 }
 VkxSDLWindow;
 
@@ -110,6 +114,14 @@ typedef struct VkxSDLWindowCreateInfo_
 
     /** @brief Instance create info. */
     const VkxInstanceCreateInfo* pInstanceCreateInfo;
+
+    /** @brief _Optional_. Override command pool count. */
+    uint32_t overrideCommandPoolCount;
+
+    /** @brief _Optional_. Override command pool create flags. */
+    const VkCommandPoolCreateFlags* pOverrideCommandPoolCreateFlags;
+
+    const VkRenderPassCreateInfo* pRenderPassCreateInfo; // TODO ?
 }
 VkxSDLWindowCreateInfo;
 
@@ -124,6 +136,10 @@ void vkxCreateSDLWindowOrExit(
  * @brief Destroy SDL window.
  */
 void vkxDestroySDLWindow(VkxSDLWindow* pWindow);
+
+#if 0
+VkResult vkxSDLWindowRecreateSwapchain(VkxSDLWindow* pWindow);
+#endif
 
 VkResult vkxSDLWindowAcquireNextImage(VkxSDLWindow* pWindow, uint64_t timeout);
 

@@ -640,7 +640,7 @@ uint32_t vkxGetFormatTexelSize(VkFormat format)
 }
 
 // Queue family supports given create info?
-static VkBool32 queueFamilySupportsCreateInfo(
+static VkBool32 familySupportsCreateInfo(
             VkPhysicalDevice physicalDevice,
             uint32_t familyIndex,
             const VkQueueFamilyProperties* pProperties,
@@ -661,57 +661,57 @@ static VkBool32 queueFamilySupportsCreateInfo(
 }
 
 // Find queue family that supports given create info.
-static uint32_t findQueueFamilyForCreateInfo(
+static uint32_t findFamilyForCreateInfo(
             VkPhysicalDevice physicalDevice,
-            uint32_t propertyCount,
+            uint32_t familyCount,
             const VkQueueFamilyProperties* pProperties,
             const VkxDeviceQueueFamilyCreateInfo** ppCreateInfosUsed,
             const VkxDeviceQueueFamilyCreateInfo* pCreateInfo,
             uint32_t depth)
 {
-    for (uint32_t propertyIndex = 0; propertyIndex < propertyCount;
-                  propertyIndex++) {
+    for (uint32_t familyIndex = 0; familyIndex < familyCount;
+                  familyIndex++) {
         // Queue family already used?
-        if (ppCreateInfosUsed[propertyIndex]) {
+        if (ppCreateInfosUsed[familyIndex]) {
             // Skip for now.
             continue;
         }
 
         // Found an unused queue family that supports create info?
-        if (queueFamilySupportsCreateInfo(
-                    physicalDevice, propertyIndex,
-                    &pProperties[propertyIndex], pCreateInfo)) {
+        if (familySupportsCreateInfo(
+                    physicalDevice, familyIndex,
+                    &pProperties[familyIndex], pCreateInfo)) {
             // Mark it as used, return property index.
-            ppCreateInfosUsed[propertyIndex] = pCreateInfo;
-            return propertyIndex;
+            ppCreateInfosUsed[familyIndex] = pCreateInfo;
+            return familyIndex;
         }
     }
 
-    if (depth == 0) {
-        for (uint32_t propertyIndex = 0; propertyIndex < propertyCount;
-                      propertyIndex++) {
-            if (ppCreateInfosUsed[propertyIndex] == pCreateInfo) {
+    if (depth < 2) {
+        for (uint32_t familyIndex = 0; familyIndex < familyCount;
+                      familyIndex++) {
+            if (ppCreateInfosUsed[familyIndex] == pCreateInfo) {
                 continue;
             }
             // Found a used queue family that supports create info?
-            if (queueFamilySupportsCreateInfo(
-                        physicalDevice, propertyIndex,
-                        &pProperties[propertyIndex], pCreateInfo)) {
+            if (familySupportsCreateInfo(
+                        physicalDevice, familyIndex,
+                        &pProperties[familyIndex], pCreateInfo)) {
                 // Try to find somewhere else to put the create info 
                 // for this family.
-                uint32_t otherIndex = findQueueFamilyForCreateInfo(
+                uint32_t otherIndex = findFamilyForCreateInfo(
                         physicalDevice,
-                        propertyCount,
+                        familyCount,
                         pProperties,
                         ppCreateInfosUsed,
-                        ppCreateInfosUsed[propertyIndex],
+                        ppCreateInfosUsed[familyIndex],
                         depth + 1);
                 if (otherIndex != UINT32_MAX) {
                     // Move it there, put current create info here.
                     ppCreateInfosUsed[otherIndex] = 
-                    ppCreateInfosUsed[propertyIndex];
-                    ppCreateInfosUsed[propertyIndex] = pCreateInfo;
-                    return propertyIndex;
+                    ppCreateInfosUsed[familyIndex];
+                    ppCreateInfosUsed[familyIndex] = pCreateInfo;
+                    return familyIndex;
                 }
             }
         }
@@ -722,45 +722,44 @@ static uint32_t findQueueFamilyForCreateInfo(
 }
 
 // Find queue family for each create info.
-static VkBool32 findQueueFamilyForEachCreateInfo(
+static VkBool32 findFamilyForEachCreateInfo(
             VkPhysicalDevice physicalDevice,
             uint32_t createInfoCount,
             const VkxDeviceQueueFamilyCreateInfo* pCreateInfos,
-            VkDeviceQueueCreateInfo* pOutputCreateInfos,
             VkxDeviceQueueFamily* pFamilies)
 {
     // Queue family properties.
-    uint32_t propertyCount = 0;
+    uint32_t familyCount = 0;
     VkQueueFamilyProperties* pProperties = NULL;
     vkGetPhysicalDeviceQueueFamilyProperties(
-            physicalDevice, &propertyCount, NULL);
+            physicalDevice, &familyCount, NULL);
     pProperties = 
             VKX_LOCAL_MALLOC_TYPE(
-            VkQueueFamilyProperties, propertyCount);
+            VkQueueFamilyProperties, familyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(
-            physicalDevice, &propertyCount, pProperties);
+            physicalDevice, &familyCount, pProperties);
 
     // Create-info pointers used for each queue family.
     const VkxDeviceQueueFamilyCreateInfo** ppCreateInfosUsed = 
             VKX_LOCAL_MALLOC_TYPE(
-            const VkxDeviceQueueFamilyCreateInfo*, propertyCount);
+            const VkxDeviceQueueFamilyCreateInfo*, familyCount);
     memset(ppCreateInfosUsed, 0, 
-            sizeof(VkxDeviceQueueFamilyCreateInfo*) * propertyCount);
+            sizeof(VkxDeviceQueueFamilyCreateInfo*) * familyCount);
 
     // Iterate create-infos.
     for (uint32_t createInfoIndex = 0; createInfoIndex < createInfoCount; 
                   createInfoIndex++) {
 
         // Try to find acceptable property index.
-        uint32_t propertyIndex = findQueueFamilyForCreateInfo(
+        uint32_t familyIndex = findFamilyForCreateInfo(
                 physicalDevice,
-                propertyCount,
+                familyCount,
                 pProperties,
                 ppCreateInfosUsed,
                 pCreateInfos + createInfoIndex, 0);
 
         // Not found?
-        if (propertyIndex == UINT32_MAX) {
+        if (familyIndex == UINT32_MAX) {
 
             // Free properties.
             VKX_LOCAL_FREE(pProperties);
@@ -777,32 +776,35 @@ static VkBool32 findQueueFamilyForEachCreateInfo(
     for (uint32_t createInfoIndex = 0; createInfoIndex < createInfoCount;
                   createInfoIndex++) {
 
-        // Find property index used by this create-info.
-        uint32_t propertyIndex;
-        for (propertyIndex = 0; propertyIndex < propertyCount;
-             propertyIndex++) {
-            if (ppCreateInfosUsed[propertyIndex] == 
+        // Find family index used by this create-info.
+        uint32_t familyIndex = 0;
+        while (familyIndex < familyCount) {
+            if (ppCreateInfosUsed[familyIndex] == 
                 pCreateInfos + createInfoIndex) {
                 break;
             }
+            familyIndex++;
         }
 
+        const VkxDeviceQueueFamilyCreateInfo* 
+            pFamilyCreateInfo = &pCreateInfos[createInfoIndex];
+
         // Initialize device queue family.
-        VkxDeviceQueueFamily* pFamily = pFamilies + createInfoIndex;
+        VkxDeviceQueueFamily* pFamily = &pFamilies[createInfoIndex];
 
         // Remember queue flags requested by create info.
-        pFamily->queueFlags = pCreateInfos[createInfoIndex].queueFlags;
+        pFamily->queueFlags = pFamilyCreateInfo->queueFlags;
 
         // Remember queue family properties.
-        pFamily->queueFamilyProperties = pProperties[propertyIndex];
+        pFamily->queueFamilyProperties = pProperties[familyIndex];
 
         // Remember queue family index.
-        pFamily->queueFamilyIndex = propertyIndex;
+        pFamily->queueFamilyIndex = familyIndex;
 
         // Limit queue count to requested queue count.
-        pFamily->queueCount = pProperties[propertyIndex].queueCount;
-        if (pFamily->queueCount > pCreateInfos[createInfoIndex].queueCount)
-            pFamily->queueCount = pCreateInfos[createInfoIndex].queueCount;
+        pFamily->queueCount = pProperties[familyIndex].queueCount;
+        if (pFamily->queueCount > pFamilyCreateInfo->queueCount)
+            pFamily->queueCount = pFamilyCreateInfo->queueCount;
 
         // Allocate queues.
         pFamily->pQueues = 
@@ -813,7 +815,7 @@ static VkBool32 findQueueFamilyForEachCreateInfo(
                 (float*)malloc(sizeof(float) * pFamily->queueCount);
 
         // Use equal priority?
-        if (pCreateInfos[createInfoIndex].useEqualPriority) {
+        if (pFamilyCreateInfo->useEqualPriority == VK_TRUE) {
             // Initialize all equal priorities.
             for (uint32_t queueIndex = 0; queueIndex < pFamily->queueCount;
                           queueIndex++) {
@@ -830,16 +832,22 @@ static VkBool32 findQueueFamilyForEachCreateInfo(
             }
         }
 
-        // Initialize queue create info.
-        VkDeviceQueueCreateInfo queueCreateInfo = {
-            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .pNext = NULL,
-            .flags = 0,
-            .queueFamilyIndex = pFamily->queueFamilyIndex,
-            .queueCount = pFamily->queueCount,
-            .pQueuePriorities = pFamily->pQueuePriorities
-        };
-        pOutputCreateInfos[createInfoIndex] = queueCreateInfo;
+        // Allocate command pool handles.
+        pFamily->commandPoolCount = pFamilyCreateInfo->commandPoolCount;
+        pFamily->pCommandPools = 
+            (VkCommandPool*)malloc(
+                sizeof(VkCommandPool) * pFamily->commandPoolCount);
+        memset(pFamily->pCommandPools, 0,
+                sizeof(VkCommandPool) * pFamily->commandPoolCount);
+
+        // Allocate and copy command pool create flags.
+        pFamily->pCommandPoolCreateFlags = 
+            (VkCommandPoolCreateFlags*)malloc(
+                sizeof(VkCommandPoolCreateFlags) * pFamily->commandPoolCount);
+        memcpy(pFamily->pCommandPoolCreateFlags, 
+               pFamilyCreateInfo->pCommandPoolCreateFlags,
+               sizeof(VkCommandPoolCreateFlags) * pFamily->commandPoolCount);
+
     }
 
     // Free properties.
@@ -872,13 +880,7 @@ VkResult vkxCreateDevice(
     vkGetPhysicalDeviceFeatures(
             physicalDevice, pDevice->pPhysicalDeviceFeatures);
 
-    // Queue create infos.
-    uint32_t queueCreateInfoCount = pCreateInfo->queueFamilyCreateInfoCount;
-    VkDeviceQueueCreateInfo* pQueueCreateInfos = 
-            VKX_LOCAL_MALLOC_TYPE(
-            VkDeviceQueueCreateInfo, queueCreateInfoCount);
-
-    // Queue families.
+    // Allocate queue families.
     pDevice->queueFamilyCount = pCreateInfo->queueFamilyCreateInfoCount;
     pDevice->pQueueFamilies = 
         (VkxDeviceQueueFamily*)malloc(
@@ -886,17 +888,21 @@ VkResult vkxCreateDevice(
     memset(pDevice->pQueueFamilies, 0,
                 sizeof(VkxDeviceQueueFamily) * pDevice->queueFamilyCount);
 
-    if (!findQueueFamilyForEachCreateInfo(
+    // Find queue families.
+    if (!findFamilyForEachCreateInfo(
             physicalDevice,
             pCreateInfo->queueFamilyCreateInfoCount,
             pCreateInfo->pQueueFamilyCreateInfos,
-            pQueueCreateInfos,
             pDevice->pQueueFamilies)) {
         vkxDestroyDevice(pDevice, pAllocator);
-        VKX_LOCAL_FREE(pQueueCreateInfos);
         return VK_ERROR_INITIALIZATION_FAILED;
     }
 
+    // Initialize device create info.
+    uint32_t queueCreateInfoCount = pDevice->queueFamilyCount;
+    VkDeviceQueueCreateInfo* pQueueCreateInfos =
+            VKX_LOCAL_MALLOC_TYPE(
+            VkDeviceQueueCreateInfo, pDevice->queueFamilyCount);
     VkDeviceCreateInfo deviceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = NULL,
@@ -909,33 +915,76 @@ VkResult vkxCreateDevice(
         .ppEnabledExtensionNames = pCreateInfo->ppEnabledExtensionNames,
         .pEnabledFeatures = pDevice->pPhysicalDeviceFeatures
     };
-
-    // Create device.
-    VkResult result = vkCreateDevice(
-            physicalDevice, 
-            &deviceCreateInfo, pAllocator, 
-            &pDevice->device);
-
-    // Free queue create infos.
-    VKX_LOCAL_FREE(pQueueCreateInfos);
-
-    if (result != VK_SUCCESS) {
-        pDevice->device = VK_NULL_HANDLE;
-        vkxDestroyDevice(pDevice, pAllocator);
-        return result;
+    for (uint32_t familyIndex = 0; familyIndex < pDevice->queueFamilyCount;
+                  familyIndex++) {
+        // Initialize device queue create info.
+        VkDeviceQueueCreateInfo queueCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .queueFamilyIndex = 
+                pDevice->pQueueFamilies[familyIndex].queueFamilyIndex,
+            .queueCount = 
+                pDevice->pQueueFamilies[familyIndex].queueCount,
+            .pQueuePriorities =
+                pDevice->pQueueFamilies[familyIndex].pQueuePriorities
+        };
+        pQueueCreateInfos[familyIndex] = queueCreateInfo;
     }
 
-    // Get all of the queues.
+    {
+        // Create device.
+        VkResult result = vkCreateDevice(
+                physicalDevice, 
+                &deviceCreateInfo, pAllocator, 
+                &pDevice->device);
+
+        // Create device failure?
+        if (result != VK_SUCCESS) {
+            pDevice->device = VK_NULL_HANDLE;
+            vkxDestroyDevice(pDevice, pAllocator);
+            VKX_LOCAL_FREE(pQueueCreateInfos); 
+            return result;
+        }
+    } 
+
+    // Free device queue create infos.
+    VKX_LOCAL_FREE(pQueueCreateInfos); 
+
+    // Latent device queue family initialization.
     for (uint32_t familyIndex = 0; familyIndex < pDevice->queueFamilyCount;
                   familyIndex++) {
         VkxDeviceQueueFamily* pQueueFamily = 
-                    &pDevice->pQueueFamilies[familyIndex];
+                    pDevice->pQueueFamilies + familyIndex;
+
+        // Get queues.
         for (uint32_t queueIndex = 0; queueIndex < pQueueFamily->queueCount;
                       queueIndex++) {
             vkGetDeviceQueue(
                     pDevice->device, 
                     pQueueFamily->queueFamilyIndex, queueIndex,
                     pQueueFamily->pQueues + queueIndex);
+        }
+
+        // Create command pools.
+        for (uint32_t poolIndex = 0; 
+                      poolIndex < pQueueFamily->commandPoolCount;
+                      poolIndex++) {
+            VkCommandPoolCreateInfo commandPoolCreateInfo = {
+                .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+                .pNext = NULL,
+                .flags = pQueueFamily->pCommandPoolCreateFlags[poolIndex],
+                .queueFamilyIndex = pQueueFamily->queueFamilyIndex
+            };
+            VkResult result = vkCreateCommandPool(
+                    pDevice->device,
+                    &commandPoolCreateInfo,
+                    pAllocator,
+                    pQueueFamily->pCommandPools + poolIndex);
+            if (result != VK_SUCCESS) {
+                vkxDestroyDevice(pDevice, pAllocator);
+                return result;
+            }
         }
     }
 
@@ -951,20 +1000,39 @@ void vkxDestroyDevice(
         // Free physical device features.
         free(pDevice->pPhysicalDeviceFeatures);
 
-        // Destroy device.
-        vkDestroyDevice(pDevice->device, pAllocator);
-
-        // Free queue family queues and queue priorities.
         for (uint32_t familyIndex = 0; familyIndex < pDevice->queueFamilyCount;
                       familyIndex++) {
             VkxDeviceQueueFamily* pQueueFamily = 
                         &pDevice->pQueueFamilies[familyIndex];
+
+            // Free queues.
             free(pQueueFamily->pQueues);
+
+            // Free queue priorities.
             free(pQueueFamily->pQueuePriorities);
+
+            // Destroy command pools.
+            for (uint32_t poolIndex = 0;
+                          poolIndex < pQueueFamily->commandPoolCount;
+                          poolIndex++) {
+                vkDestroyCommandPool(
+                        pDevice->device, 
+                        pQueueFamily->pCommandPools[poolIndex],
+                        pAllocator);
+            }
+
+            // Free command pools.
+            free(pQueueFamily->pCommandPools);
+
+            // Free command pool create flags.
+            free(pQueueFamily->pCommandPoolCreateFlags);
         }
 
         // Free queue families.
         free(pDevice->pQueueFamilies);
+
+        // Destroy device.
+        vkDestroyDevice(pDevice->device, pAllocator);
 
         // Nullify.
         memset(pDevice, 0, sizeof(VkxDevice));

@@ -219,6 +219,15 @@ typedef struct VkxDeviceQueueFamily_
 
     /** @brief Queue priorities. */
     float* pQueuePriorities;
+
+    /** @brief Command pool count. */
+    uint32_t commandPoolCount;
+
+    /** @brief Command pools. */
+    VkCommandPool* pCommandPools;
+
+    /** @brief Command pool flags for each command pool. */
+    VkCommandPoolCreateFlags* pCommandPoolCreateFlags;
 }
 VkxDeviceQueueFamily;
 
@@ -227,7 +236,7 @@ VkxDeviceQueueFamily;
  */
 typedef struct VkxDeviceQueueFamilyCreateInfo_
 {
-    /** @brief Required queue flags. */
+    /** @brief Queue flags. */
     VkQueueFlags queueFlags;
 
     /** @brief Queue count. */
@@ -241,6 +250,12 @@ typedef struct VkxDeviceQueueFamilyCreateInfo_
 
     /** @brief Surface for present operations, or `VK_NULL_HANDLE`. */
     VkSurfaceKHR presentSurface;
+
+    /** @brief Command pool count. */
+    uint32_t commandPoolCount;
+
+    /** @brief Command pool create falgs. */
+    const VkCommandPoolCreateFlags* pCommandPoolCreateFlags;
 }
 VkxDeviceQueueFamilyCreateInfo;
 

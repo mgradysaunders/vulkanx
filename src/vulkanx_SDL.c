@@ -31,6 +31,18 @@
 #include <stdio.h>
 #include <vulkanx_SDL.h>
 
+static char* mallocAndCopyString(const char* str)
+{
+    if (str == NULL) {
+        return NULL;
+    }
+    else {
+        char* dup = (char*)malloc(strlen(str) + 1);
+        memcpy(dup, str, strlen(str) + 1);
+        return dup;
+    }
+}
+
 // Is physical device okay for SDL?
 static VkBool32 isPhysicalDeviceOkayForSDL(
                 VkPhysicalDevice physicalDevice, void* pUserData)
@@ -157,7 +169,7 @@ void vkxCreateSDLWindowOrExit(
                   layerIndex++) {
         if (pLayersEnabled[layerIndex] == VK_TRUE) {
             pWindow->ppEnabledLayerNames[pWindow->enabledLayerCount] =
-                     strdup(ppLayerNames[layerIndex]);
+                     mallocAndCopyString(ppLayerNames[layerIndex]);
             pWindow->enabledLayerCount++;
         }
     }
@@ -170,7 +182,7 @@ void vkxCreateSDLWindowOrExit(
                   extensionIndex++) {
         if (pExtensionsEnabled[extensionIndex] == VK_TRUE) {
             pWindow->ppEnabledExtensionNames[pWindow->enabledExtensionCount] =
-                     strdup(ppExtensionNames[extensionIndex]);
+                     mallocAndCopyString(ppExtensionNames[extensionIndex]);
             pWindow->enabledExtensionCount++;
             continue; // Skip ahead.
         }
@@ -220,8 +232,19 @@ void vkxCreateSDLWindowOrExit(
             .queueCount = 4,
             .minQueueCount = 1,
             .useEqualPriority = VK_FALSE,
-            .presentSurface = pWindow->swapchainSurface
+            .presentSurface = pWindow->swapchainSurface,
+            .commandPoolCount = pCreateInfo->overrideCommandPoolCount,
+            .pCommandPoolCreateFlags = 
+                pCreateInfo->pOverrideCommandPoolCreateFlags
         };
+        // If no command pools, create 1 command pool with no special
+        // flags by default.
+        VkCommandPoolCreateFlags defaultCommandPoolCreateFlags = 0;
+        if (queueFamilyCreateInfo.commandPoolCount == 0) {
+            queueFamilyCreateInfo.commandPoolCount = 1;
+            queueFamilyCreateInfo.pCommandPoolCreateFlags = 
+                &defaultCommandPoolCreateFlags;
+        }
         // Create device.
         VkxDeviceCreateInfo deviceCreateInfo = {
             .pSelectInfo = &physicalDeviceSelectInfo,
@@ -249,10 +272,6 @@ void vkxCreateSDLWindowOrExit(
                 pWindow->window, 
                 &drawableWidth, 
                 &drawableHeight);
-        if (drawableWidth <= 0 || drawableHeight <= 0) {
-            drawableWidth = pCreateInfo->sizeX;
-            drawableHeight = pCreateInfo->sizeY;
-        }
         VkExtent2D surfaceExtent = {
             .width = (uint32_t)drawableWidth,
             .height = (uint32_t)drawableHeight
@@ -367,6 +386,35 @@ void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
     }
 }
 
+#if 0
+VkResult vkxSDLWindowRecreateSwapchain(VkxSDLWindow* pWindow)
+{
+    // Recreate swapchain.
+    int drawableWidth = 0;
+    int drawableHeight = 0;
+    SDL_Vulkan_GetDrawableSize(
+            pWindow->window, 
+            &drawableWidth, 
+            &drawableHeight);
+    VkExtent2D surfaceExtent = {
+        .width = (uint32_t)drawableWidth,
+        .height = (uint32_t)drawableHeight
+    };
+    VkResult result = vkxRecreateSwapchain(
+            pWindow->device.physicalDevice,
+            pWindow->device.device,
+            pWindow->swapchainSurface,
+            surfaceExtent,
+            NULL,
+            &pWindow->swapchain);
+    if (result != VK_SUCCESS) {
+        return result;
+    }
+    // TODO
+    return VK_SUCCESS;
+}
+#endif
+
 VkResult vkxSDLWindowAcquireNextImage(VkxSDLWindow* pWindow, uint64_t timeout)
 {
     uint32_t nextImageIndex = 0;
@@ -394,7 +442,6 @@ VkResult vkxSDLWindowAcquireNextImage(VkxSDLWindow* pWindow, uint64_t timeout)
         }
         pWindow->pSwapchainIndices[0] = nextImageIndex;
     }
-
     return result;
 }
 

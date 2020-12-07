@@ -45,7 +45,7 @@ extern "C" {
 /**@{*/
 
 #if !DOXYGEN
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !VKX_NO_ALLOCA
 #define VKX_LOCAL_MALLOC_ __builtin_alloca
 #else
 #define VKX_LOCAL_MALLOC_ malloc
@@ -64,7 +64,7 @@ extern "C" {
 #define VKX_LOCAL_MALLOC_TYPE(T, n) (T*)VKX_LOCAL_MALLOC(sizeof(T) * (n))
 
 #if !DOXYGEN
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !VKX_NO_ALLOCA
 #define VKX_LOCAL_FREE_ (void)
 #else
 #define VKX_LOCAL_FREE_ free
