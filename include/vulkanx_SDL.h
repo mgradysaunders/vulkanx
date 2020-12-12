@@ -50,7 +50,7 @@ extern "C" {
  */
 typedef struct VkxSDLWindow_
 {
-    /** @brief The SDL window handle. */
+    /** @brief The window handle. */
     SDL_Window* window;
 
     /** @brief Enabled instance layer count. */
@@ -65,30 +65,17 @@ typedef struct VkxSDLWindow_
     /** @brief Enabled instance extension names. */
     char** ppEnabledExtensionNames;
 
-    /** @brief The Vulkan instance. */
+    /** @brief Instance. */
     VkInstance instance;
 
-    /** @brief The Vulkan device. */
+    /** @brief Device. */
     VkxDevice device;
 
-    /** @brief The Vulkan swapchain surface. */
+    /** @brief Swapchain surface. */
     VkSurfaceKHR swapchainSurface;
 
-    /** @brief The Vulkan swapchain. */
+    /** @brief Swapchain. */
     VkxSwapchain swapchain;
-
-    /** @brief The Vulkan swapchain image indices. */
-    uint32_t* pSwapchainIndices;
-
-    /** @brief The Vulkan swapchain framebuffers. */
-    VkFramebuffer* pSwapchainFramebuffers; // TODO
-
-    /** @brief The Vulkan swapchain semaphores. */
-    VkSemaphore* pSwapchainAvailableSemaphores;
-
-    /** @brief The active Vulkan swapchain semaphore. */
-    VkSemaphore swapchainAvailableSemaphore;
-
 }
 VkxSDLWindow;
 
@@ -120,8 +107,6 @@ typedef struct VkxSDLWindowCreateInfo_
 
     /** @brief _Optional_. Override command pool create flags. */
     const VkCommandPoolCreateFlags* pOverrideCommandPoolCreateFlags;
-
-    const VkRenderPassCreateInfo* pRenderPassCreateInfo; // TODO ?
 }
 VkxSDLWindowCreateInfo;
 
@@ -129,21 +114,12 @@ VkxSDLWindowCreateInfo;
  * @brief Create SDL window, or report error and exit.
  */
 void vkxCreateSDLWindowOrExit(
-        VkxSDLWindowCreateInfo* pCreateInfo,
-        VkxSDLWindow* pWindow);
+        const VkxSDLWindowCreateInfo* pCreateInfo, VkxSDLWindow* pWindow);
 
 /**
  * @brief Destroy SDL window.
  */
 void vkxDestroySDLWindow(VkxSDLWindow* pWindow);
-
-#if 0
-VkResult vkxSDLWindowRecreateSwapchain(VkxSDLWindow* pWindow);
-#endif
-
-VkResult vkxSDLWindowAcquireNextImage(VkxSDLWindow* pWindow, uint64_t timeout);
-
-VkResult vkxSDLWindowPresent(VkxSDLWindow* pWindow);
 
 /**@}*/
 

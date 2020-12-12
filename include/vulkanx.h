@@ -35,7 +35,9 @@
 #include <vulkanx/descriptor_set.h>
 #include <vulkanx/image.h>
 #include <vulkanx/memory.h>
+#include <vulkanx/pipeline.h>
 #include <vulkanx/result.h>
+#include <vulkanx/shader.h>
 #include <vulkanx/setup.h>
 #include <vulkanx/swapchain.h>
 

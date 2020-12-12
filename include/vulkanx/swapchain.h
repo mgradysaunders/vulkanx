@@ -53,6 +53,12 @@ typedef struct VkxSwapchain_
      */
     /**@{*/
 
+    /** @brief Associated physical device. */
+    VkPhysicalDevice physicalDevice;
+
+    /** @brief Associated device. */
+    VkDevice device;
+ 
     /** @brief Present mode. */
     VkPresentModeKHR presentMode;
 
@@ -77,6 +83,13 @@ typedef struct VkxSwapchain_
     /** @brief Image sharing mode. */
     VkSharingMode imageSharingMode;
 
+    /** @brief Graphics queue. */
+    VkQueue graphicsQueue;
+
+    /** @brief Present queue. */
+    VkQueue presentQueue;
+
+
     /**@}*/
 
     /**
@@ -98,6 +111,52 @@ typedef struct VkxSwapchain_
 
     /** @brief Image views. */
     VkImageView* pImageViews;
+
+    /** @brief Image indices. */
+    uint32_t* pIndices;
+
+    /** @brief Acquired semaphores. */
+    VkSemaphore* pAcquiredSemaphores;
+
+    /** @brief Released semaphores. */
+    VkSemaphore* pReleasedSemaphores;
+
+    /** @brief Next acquired semaphore. */
+    VkSemaphore nextAcquiredSemaphore;
+
+    /** @brief Next released semaphore. */
+    VkSemaphore nextReleasedSemaphore;
+
+    /** @brief Fences. */
+    VkFence* pFences;
+
+    /** @brief Command pool. */
+    VkCommandPool commandPool;
+
+    /** @brief Command buffers. */
+    VkCommandBuffer* pCommandBuffers;
+
+    /**@}*/
+
+    /**
+     * @name Swapchain active state
+     */
+    /**@{*/
+
+    /** @brief Active image index. */
+    uint32_t activeIndex;
+
+    /** @brief Active acquried semaphore. */
+    VkSemaphore activeAcquiredSemaphore;
+
+    /** @brief Active released semaphore. */
+    VkSemaphore activeReleasedSemaphore;
+
+    /** @brief Active fence. */
+    VkFence activeFence;
+
+    /** @brief Active command buffer. */
+    VkCommandBuffer activeCommandBuffer;
 
     /**@}*/
 }
@@ -157,12 +216,6 @@ VkResult vkxCreateSwapchain(
 /**
  * @brief Recreate swapchain.
  *
- * @param[in] physicalDevice
- * Physical device.
- *
- * @param[in] device
- * Device.
- *
  * @param[in] surface
  * Surface.
  *
@@ -176,27 +229,20 @@ VkResult vkxCreateSwapchain(
  * Swapchain.
  *
  * @pre
- * - `physicalDevice` was used to create `pSwapchain`
- * - `device` was used to create `pSwapchain`
  * - `surface` was used to create `pSwapchain`
  * - `pAllocator` was used to create `pSwapchain`
  * - `pSwapchain` is non-`NULL`
  * - `pSwapchain` was previously created by `vkxCreateSwapchain`
  */
 VkResult vkxRecreateSwapchain(
-            VkPhysicalDevice physicalDevice,
-            VkDevice device,
             VkSurfaceKHR surface,
             VkExtent2D surfaceExtent,
             const VkAllocationCallbacks* pAllocator,
             VkxSwapchain* pSwapchain)
-                __attribute__((nonnull(6)));
+                __attribute__((nonnull(4)));
 
 /**
  * @brief Destroy swapchain.
- *
- * @param[in] device
- * Device.
  *
  * @param[inout] pSwapchain
  * Swapchain.
@@ -205,7 +251,6 @@ VkResult vkxRecreateSwapchain(
  * _Optional_. Allocation callbacks.
  *
  * @pre
- * - `device` was used to create `pSwapchain`
  * - `pAllocator` was used to create `pSwapchain`
  * - `pSwapchain` was previously created by `vkxCreateSwapchain`
  *
@@ -216,9 +261,31 @@ VkResult vkxRecreateSwapchain(
  * Does nothing if `pSwapchain` is `NULL`.
  */
 void vkxDestroySwapchain(
-            VkDevice device,
             VkxSwapchain* pSwapchain,
             const VkAllocationCallbacks* pAllocator);
+
+/**
+ * @brief Acquire next image.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[inout] pSwapchain
+ * Swapchain.
+ *
+ * @param[in] timeout
+ * Timeout.
+ */
+VkResult vkxSwapchainAcquireNextImage(
+            VkxSwapchain* pSwapchain, uint64_t timeout);
+
+VkResult vkxSwapchainSubmit(
+            VkxSwapchain* pSwapchain);
+
+VkResult vkxSwapchainPresent(
+            VkxSwapchain* pSwapchain,
+            uint32_t moreWaitSemaphoreCount,
+            const VkSemaphore* pMoreWaitSemaphores);
 
 /**@}*/
 

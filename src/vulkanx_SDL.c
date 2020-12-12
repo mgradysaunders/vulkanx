@@ -31,19 +31,18 @@
 #include <stdio.h>
 #include <vulkanx_SDL.h>
 
-static char* mallocAndCopyString(const char* str)
+static char* deepCopyString(const char* str)
 {
     if (str == NULL) {
         return NULL;
     }
     else {
-        char* dup = (char*)malloc(strlen(str) + 1);
+        char* dup = malloc(strlen(str) + 1);
         memcpy(dup, str, strlen(str) + 1);
         return dup;
     }
 }
 
-// Is physical device okay for SDL?
 static VkBool32 isPhysicalDeviceOkayForSDL(
                 VkPhysicalDevice physicalDevice, void* pUserData)
 {
@@ -66,8 +65,7 @@ static VkBool32 isPhysicalDeviceOkayForSDL(
 }
 
 void vkxCreateSDLWindowOrExit(
-        VkxSDLWindowCreateInfo* pCreateInfo,
-        VkxSDLWindow* pWindow)
+        const VkxSDLWindowCreateInfo* pCreateInfo, VkxSDLWindow* pWindow)
 {
     assert(pCreateInfo);
     assert(pWindow);
@@ -169,7 +167,7 @@ void vkxCreateSDLWindowOrExit(
                   layerIndex++) {
         if (pLayersEnabled[layerIndex] == VK_TRUE) {
             pWindow->ppEnabledLayerNames[pWindow->enabledLayerCount] =
-                     mallocAndCopyString(ppLayerNames[layerIndex]);
+                     deepCopyString(ppLayerNames[layerIndex]);
             pWindow->enabledLayerCount++;
         }
     }
@@ -182,7 +180,7 @@ void vkxCreateSDLWindowOrExit(
                   extensionIndex++) {
         if (pExtensionsEnabled[extensionIndex] == VK_TRUE) {
             pWindow->ppEnabledExtensionNames[pWindow->enabledExtensionCount] =
-                     mallocAndCopyString(ppExtensionNames[extensionIndex]);
+                     deepCopyString(ppExtensionNames[extensionIndex]);
             pWindow->enabledExtensionCount++;
             continue; // Skip ahead.
         }
@@ -292,47 +290,6 @@ void vkxCreateSDLWindowOrExit(
             exit(EXIT_FAILURE);
         }
     }
-
-    pWindow->pSwapchainIndices = 
-        (uint32_t*)malloc(
-                sizeof(uint32_t) * pWindow->swapchain.imageCount);
-    for (uint32_t imageIndex = 0; imageIndex < pWindow->swapchain.imageCount;
-                  imageIndex++) {
-        pWindow->pSwapchainIndices[imageIndex] = pWindow->swapchain.imageCount;
-    }
-
-    pWindow->pSwapchainAvailableSemaphores = 
-        (VkSemaphore*)malloc(
-                sizeof(VkSemaphore) * pWindow->swapchain.imageCount);
-    memset(pWindow->pSwapchainAvailableSemaphores, 0,
-                sizeof(VkSemaphore) * pWindow->swapchain.imageCount);
-
-    VkSemaphoreCreateInfo semaphoreCreateInfo = {
-        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
-        .pNext = NULL,
-        .flags = 0
-    };
-    for (uint32_t imageIndex = 0; imageIndex < pWindow->swapchain.imageCount;
-                  imageIndex++) {
-        VkResult result = vkCreateSemaphore(
-                pWindow->device.device,
-                &semaphoreCreateInfo, NULL,
-                &pWindow->pSwapchainAvailableSemaphores[imageIndex]);
-        if (result != VK_SUCCESS) {
-            fprintf(stderr, "failed to create swapchain semaphores\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-    {
-        VkResult result = vkCreateSemaphore(
-                pWindow->device.device,
-                &semaphoreCreateInfo, NULL,
-                &pWindow->swapchainAvailableSemaphore);
-        if (result != VK_SUCCESS) {
-            fprintf(stderr, "failed to create swapchain semaphores\n");
-            exit(EXIT_FAILURE);
-        }
-    }
 }
 
 void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
@@ -350,23 +307,9 @@ void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
             free(pWindow->ppEnabledExtensionNames[nameIndex]);
         free(pWindow->ppEnabledExtensionNames);
 
-        // Free swapchain semaphores and indices.
-        for (uint32_t imageIndex = 0; 
-                      imageIndex < pWindow->swapchain.imageCount; imageIndex++)
-            vkDestroySemaphore(
-                    pWindow->device.device, 
-                    pWindow->pSwapchainAvailableSemaphores[imageIndex],
-                    NULL);
-        vkDestroySemaphore(
-                pWindow->device.device, 
-                pWindow->swapchainAvailableSemaphore,
-                NULL);
-        free(pWindow->pSwapchainAvailableSemaphores);
-        free(pWindow->pSwapchainIndices);
-
         // Destroy swapchain.
         vkxDestroySwapchain(
-                pWindow->device.device, &pWindow->swapchain, NULL);
+                &pWindow->swapchain, NULL);
 
         // Destroy swapchain surface.
         vkDestroySurfaceKHR(
@@ -384,80 +327,4 @@ void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
         // Nullify.
         memset(pWindow, 0, sizeof(VkxSDLWindow));
     }
-}
-
-#if 0
-VkResult vkxSDLWindowRecreateSwapchain(VkxSDLWindow* pWindow)
-{
-    // Recreate swapchain.
-    int drawableWidth = 0;
-    int drawableHeight = 0;
-    SDL_Vulkan_GetDrawableSize(
-            pWindow->window, 
-            &drawableWidth, 
-            &drawableHeight);
-    VkExtent2D surfaceExtent = {
-        .width = (uint32_t)drawableWidth,
-        .height = (uint32_t)drawableHeight
-    };
-    VkResult result = vkxRecreateSwapchain(
-            pWindow->device.physicalDevice,
-            pWindow->device.device,
-            pWindow->swapchainSurface,
-            surfaceExtent,
-            NULL,
-            &pWindow->swapchain);
-    if (result != VK_SUCCESS) {
-        return result;
-    }
-    // TODO
-    return VK_SUCCESS;
-}
-#endif
-
-VkResult vkxSDLWindowAcquireNextImage(VkxSDLWindow* pWindow, uint64_t timeout)
-{
-    uint32_t nextImageIndex = 0;
-    VkResult result = vkAcquireNextImageKHR(
-            pWindow->device.device,
-            pWindow->swapchain.swapchain,
-            timeout,
-            pWindow->swapchainAvailableSemaphore,
-            VK_NULL_HANDLE, &nextImageIndex);
-    if (result == VK_SUCCESS) {
-        // Swap semaphores.
-        VkSemaphore* semaphore1 = &pWindow->swapchainAvailableSemaphore;
-        VkSemaphore* semaphore2 = 
-                &pWindow->pSwapchainAvailableSemaphores[nextImageIndex];
-        VkSemaphore tmp = *semaphore1;
-        *semaphore1 = *semaphore2;
-        *semaphore2 = tmp;
-
-        // Shuffle indices.
-        uint32_t imageCount = pWindow->swapchain.imageCount;
-        for (uint32_t imageIndex = 1; imageIndex < imageCount; 
-                      imageIndex++) {
-            pWindow->pSwapchainIndices[imageIndex] =  
-            pWindow->pSwapchainIndices[imageIndex - 1];
-        }
-        pWindow->pSwapchainIndices[0] = nextImageIndex;
-    }
-    return result;
-}
-
-VkResult vkxSDLWindowPresent(VkxSDLWindow* pWindow)
-{
-    VkPresentInfoKHR presentInfo = {
-        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-        .pNext = NULL,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = NULL, // TODO
-        .swapchainCount = 1,
-        .pSwapchains = &pWindow->swapchain.swapchain,
-        .pImageIndices = pWindow->pSwapchainIndices,
-        .pResults = NULL
-    };
-
-    return vkQueuePresentKHR(
-            pWindow->device.pQueueFamilies[0].pQueues[0], &presentInfo);
 }

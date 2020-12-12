@@ -29,15 +29,14 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vulkanx/command_buffer.h>
 #include <vulkanx/result.h>
 #include <vulkanx/memory.h>
 #include <vulkanx/swapchain.h>
 
 // Select present mode.
-static
-VkResult selectSwapchainPresentMode(
-            VkPhysicalDevice physicalDevice, 
-            VkSurfaceKHR surface,
+static VkResult selectSwapchainPresentMode(
+            VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
             VkPresentModeKHR* pPresentMode)
 {
     // Allocate present modes.
@@ -49,14 +48,12 @@ VkResult selectSwapchainPresentMode(
         return VK_ERROR_INCOMPATIBLE_DRIVER;
     }
     pPresentModes = 
-        (VkPresentModeKHR*)VKX_LOCAL_MALLOC(
-                sizeof(VkPresentModeKHR) * presentModeCount);
+        VKX_LOCAL_MALLOC_TYPE(VkPresentModeKHR, presentModeCount);
     {
         // Retrieve present modes.
         VkResult result = 
             vkGetPhysicalDeviceSurfacePresentModesKHR(
-                    physicalDevice, surface, 
-                    &presentModeCount,
+                    physicalDevice, surface, &presentModeCount,
                     pPresentModes);
         if (VKX_IS_ERROR(result)) {
             // Free present modes.
@@ -105,23 +102,17 @@ VkResult selectSwapchainPresentMode(
 }
 
 // Select surface format.
-static 
-VkResult selectSwapchainSurfaceFormat(
-            VkPhysicalDevice physicalDevice, 
-            VkSurfaceKHR surface,
+static VkResult selectSwapchainSurfaceFormat(
+            VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
             VkSurfaceFormatKHR* pSurfaceFormat)
 {
     // Allocate surface formats.
     uint32_t surfaceFormatCount = 0;
     VkSurfaceFormatKHR* pSurfaceFormats = NULL;
     vkGetPhysicalDeviceSurfaceFormatsKHR(
-            physicalDevice, 
-            surface,
-            &surfaceFormatCount, 
-            NULL);
+            physicalDevice, surface, &surfaceFormatCount, NULL);
     pSurfaceFormats =
-        (VkSurfaceFormatKHR*)VKX_LOCAL_MALLOC(
-                sizeof(VkSurfaceFormatKHR) * surfaceFormatCount);
+        VKX_LOCAL_MALLOC_TYPE(VkSurfaceFormatKHR, surfaceFormatCount);
     {
         // Retrieve surface formats.
         VkResult result = 
@@ -205,14 +196,14 @@ VkResult vkxCreateSwapchain(
 {
     assert(pSwapchain);
     memset(pSwapchain, 0, sizeof(VkxSwapchain));
+    pSwapchain->physicalDevice = physicalDevice;
+    pSwapchain->device = device;
 
     {
         // Select present mode.
         VkResult result = 
             selectSwapchainPresentMode(
-                    physicalDevice, 
-                    surface, 
-                    &pSwapchain->presentMode);
+                    physicalDevice, surface, &pSwapchain->presentMode);
         if (VKX_IS_ERROR(result)) {
             return result;
         }
@@ -222,9 +213,7 @@ VkResult vkxCreateSwapchain(
         // Select surface format.
         VkResult result = 
             selectSwapchainSurfaceFormat(
-                    physicalDevice, 
-                    surface, 
-                    &pSwapchain->surfaceFormat);
+                    physicalDevice, surface, &pSwapchain->surfaceFormat);
         if (VKX_IS_ERROR(result)) {
             return result;
         }
@@ -235,9 +224,7 @@ VkResult vkxCreateSwapchain(
         // Get surface capabilities.
         VkResult result = 
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-                    physicalDevice,
-                    surface,
-                    &surfaceCapabilities);
+                    physicalDevice, surface, &surfaceCapabilities);
         if (VKX_IS_ERROR(result)) {
             return result;
         }
@@ -279,12 +266,10 @@ VkResult vkxCreateSwapchain(
 
     // Queue families unique?
     if (graphicsQueueFamilyIndex != presentQueueFamilyIndex) {
-
         // Set queue family indices.
         pSwapchain->queueFamilyIndexCount = 2;
         pSwapchain->queueFamilyIndices[0] = graphicsQueueFamilyIndex;
         pSwapchain->queueFamilyIndices[1] = presentQueueFamilyIndex;
-
         // Set image sharing mode.
         pSwapchain->imageSharingMode = VK_SHARING_MODE_CONCURRENT;
     }
@@ -293,31 +278,47 @@ VkResult vkxCreateSwapchain(
         pSwapchain->queueFamilyIndexCount = 1;
         pSwapchain->queueFamilyIndices[0] = graphicsQueueFamilyIndex;
         pSwapchain->queueFamilyIndices[1] = UINT32_MAX;
-
         // Set image sharing mode.
         pSwapchain->imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;       
     }
 
+    // Get queues.
+    vkGetDeviceQueue(
+            device, graphicsQueueFamilyIndex, 0, 
+            &pSwapchain->graphicsQueue);
+    vkGetDeviceQueue(
+            device, presentQueueFamilyIndex, 0, 
+            &pSwapchain->presentQueue);
+    
+    // Create command pool.
+    VkCommandPoolCreateInfo commandPoolCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+        .queueFamilyIndex = graphicsQueueFamilyIndex
+    };
+    VkResult result = vkCreateCommandPool(
+            device, &commandPoolCreateInfo, pAllocator, 
+            &pSwapchain->commandPool);
+    if (result != VK_SUCCESS) {
+        return result;
+    }
+
     // Delegate.
     return vkxRecreateSwapchain(
-                physicalDevice,
-                device,
-                surface,
-                surfaceExtent,
-                pAllocator,
-                pSwapchain);
+                surface, surfaceExtent, pAllocator, pSwapchain);
 }
 
 // Recreate swapchain.
 VkResult vkxRecreateSwapchain(
-            VkPhysicalDevice physicalDevice,
-            VkDevice device,
             VkSurfaceKHR surface,
             VkExtent2D surfaceExtent,
             const VkAllocationCallbacks* pAllocator,
             VkxSwapchain* pSwapchain)
 {
     assert(pSwapchain);
+    VkPhysicalDevice physicalDevice = pSwapchain->physicalDevice;
+    VkDevice device = pSwapchain->device;
 
     // Old swapchain.
     VkSwapchainKHR oldSwapchain = pSwapchain->swapchain;
@@ -327,12 +328,9 @@ VkResult vkxRecreateSwapchain(
         // Get surface capabilities.
         VkResult result =
             vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
-                    physicalDevice,
-                    surface,
-                    &surfaceCapabilities);
+                    physicalDevice, surface, &surfaceCapabilities);
         if (VKX_IS_ERROR(result)) {
-            // Destroy swapchain.
-            vkxDestroySwapchain(device, pSwapchain, pAllocator);
+            vkxDestroySwapchain(pSwapchain, pAllocator);
             return result;
         }
     }
@@ -342,7 +340,6 @@ VkResult vkxRecreateSwapchain(
 
     // Undefined?
     if (pSwapchain->imageExtent.width == UINT32_MAX) {
-
         // Clamp surface extent width.
         if (surfaceExtent.width < surfaceCapabilities.minImageExtent.width) {
             surfaceExtent.width = surfaceCapabilities.minImageExtent.width;
@@ -350,7 +347,6 @@ VkResult vkxRecreateSwapchain(
         if (surfaceExtent.width > surfaceCapabilities.maxImageExtent.width) {
             surfaceExtent.width = surfaceCapabilities.maxImageExtent.width;
         }
-
         // Clamp surface extent height.
         if (surfaceExtent.height < surfaceCapabilities.minImageExtent.height) {
             surfaceExtent.height = surfaceCapabilities.minImageExtent.height;
@@ -358,7 +354,6 @@ VkResult vkxRecreateSwapchain(
         if (surfaceExtent.height > surfaceCapabilities.maxImageExtent.height) {
             surfaceExtent.height = surfaceCapabilities.maxImageExtent.height;
         }
-
         // Set image extent.
         pSwapchain->imageExtent = surfaceExtent;
     }
@@ -400,59 +395,102 @@ VkResult vkxRecreateSwapchain(
                     &swapchainCreateInfo, pAllocator,
                     &pSwapchain->swapchain);
         if (VKX_IS_ERROR(result)) {
-            // Destroy swapchain.
             pSwapchain->swapchain = oldSwapchain;
-            vkxDestroySwapchain(device, pSwapchain, pAllocator);
+            vkxDestroySwapchain(pSwapchain, pAllocator);
             return result;
         }
     }
 
-    for (uint32_t imageIndex = 0;
-                  imageIndex < pSwapchain->imageCount;
+    for (uint32_t imageIndex = 0; imageIndex < pSwapchain->imageCount;
                   imageIndex++) {
-
-        // Destroy old swapchain image views.
+        // Destroy image views.
         vkDestroyImageView(
                 device,
                 pSwapchain->pImageViews[imageIndex], pAllocator);
+        // Destroy acquired semaphores.
+        vkDestroySemaphore(
+                device,
+                pSwapchain->pAcquiredSemaphores[imageIndex], pAllocator);
+        // Destroy released semaphores.
+        vkDestroySemaphore(
+                device,
+                pSwapchain->pReleasedSemaphores[imageIndex], pAllocator);
+        // Destroy fences.
+        vkDestroyFence(
+                device,
+                pSwapchain->pFences[imageIndex], pAllocator);
     }
-
+    // Destroy next acquired semaphore.
+    vkDestroySemaphore(
+            device, pSwapchain->nextAcquiredSemaphore, pAllocator);
+    // Destroy next released semaphore.
+    vkDestroySemaphore(
+            device, pSwapchain->nextReleasedSemaphore, pAllocator);
+    // Free command buffers.
+    vkFreeCommandBuffers(
+            device,
+            pSwapchain->commandPool, pSwapchain->imageCount,
+            pSwapchain->pCommandBuffers);
     // Destroy old swapchain.
     vkDestroySwapchainKHR(
-            device,
-            oldSwapchain, pAllocator);
+            device, oldSwapchain, pAllocator);
 
     uint32_t imageCount = 0;
     vkGetSwapchainImagesKHR(
-            device,
-            pSwapchain->swapchain,
-            &imageCount, NULL);
+            device, pSwapchain->swapchain, &imageCount, NULL);
     if (pSwapchain->imageCount != imageCount) {
         pSwapchain->imageCount = imageCount;
-
-        // Reallocate swapchain images.
+        // Reallocate images.
         pSwapchain->pImages = 
-            (VkImage*)realloc(
-                    pSwapchain->pImages, 
-                    sizeof(VkImage) * imageCount);
-
-        // Reallocate swapchain image views.
+                realloc(pSwapchain->pImages, 
+                        imageCount * sizeof(VkImage));
+        // Reallocate image views.
         pSwapchain->pImageViews = 
-            (VkImageView*)realloc(
-                    pSwapchain->pImageViews, 
-                    sizeof(VkImageView) * imageCount);
+                realloc(pSwapchain->pImageViews, 
+                        imageCount * sizeof(VkImageView));
+        // Reallocate indices.
+        pSwapchain->pIndices = 
+                realloc(pSwapchain->pIndices, 
+                        imageCount * sizeof(uint32_t));
+        // Reallocate acquired semaphores. 
+        pSwapchain->pAcquiredSemaphores = 
+                realloc(pSwapchain->pAcquiredSemaphores, 
+                        imageCount * sizeof(VkSemaphore));
+        // Reallocate released semaphores. 
+        pSwapchain->pReleasedSemaphores = 
+                realloc(pSwapchain->pReleasedSemaphores, 
+                        imageCount * sizeof(VkSemaphore));
+        // Reallocate fences.
+        pSwapchain->pFences = 
+                realloc(pSwapchain->pFences, 
+                        imageCount * sizeof(VkFence));
+        // Reallocate command buffers.
+        pSwapchain->pCommandBuffers = 
+                realloc(pSwapchain->pCommandBuffers,
+                        imageCount * sizeof(VkCommandBuffer));
     }
-    for (uint32_t imageIndex = 0;
-                  imageIndex < pSwapchain->imageCount;
-                  imageIndex++) {
-
-        // Nullify swapchain images.
-        pSwapchain->pImages[imageIndex] = VK_NULL_HANDLE;
-
-        // Nullify swapchain image views.
-        pSwapchain->pImageViews[imageIndex] = VK_NULL_HANDLE;
-    }
-
+    // Nullify images.
+    memset(pSwapchain->pImages, 0, imageCount * sizeof(VkImage));
+    // Nullify image views.
+    memset(pSwapchain->pImageViews, 0, imageCount * sizeof(VkImageView));
+    // Nullify/invalidate indices.
+    memset(pSwapchain->pIndices, 0xFF, imageCount * sizeof(uint32_t));
+    // Nullify acquired semaphores.
+    memset(pSwapchain->pAcquiredSemaphores, 
+           0, imageCount * sizeof(VkSemaphore));
+    // Nullify released semaphores.
+    memset(pSwapchain->pReleasedSemaphores, 
+           0, imageCount * sizeof(VkSemaphore));
+    // Nullify temporary acquired semaphore.
+    pSwapchain->nextAcquiredSemaphore = VK_NULL_HANDLE;
+    // Nullify temporary released semaphore.
+    pSwapchain->nextReleasedSemaphore = VK_NULL_HANDLE;
+    // Nullify fences.
+    memset(pSwapchain->pFences, 0, imageCount * sizeof(VkFence));
+    // Nullify command buffers.
+    memset(pSwapchain->pCommandBuffers, 
+           0, imageCount * sizeof(VkCommandBuffer));
+    
     {
         // Get swapchain images.
         VkResult result = 
@@ -462,8 +500,7 @@ VkResult vkxRecreateSwapchain(
                     &pSwapchain->imageCount,
                     pSwapchain->pImages);
         if (VKX_IS_ERROR(result)) {
-            // Destroy swapchain.
-            vkxDestroySwapchain(device, pSwapchain, pAllocator);
+            vkxDestroySwapchain(pSwapchain, pAllocator);
             return result;
         }
     }
@@ -489,8 +526,7 @@ VkResult vkxRecreateSwapchain(
         }
     };
 
-    for (uint32_t imageIndex = 0;
-                  imageIndex < pSwapchain->imageCount;
+    for (uint32_t imageIndex = 0; imageIndex < pSwapchain->imageCount;
                   imageIndex++) {
         // Create swapchain image view.
         imageViewCreateInfo.image = pSwapchain->pImages[imageIndex];
@@ -500,47 +536,237 @@ VkResult vkxRecreateSwapchain(
                     &imageViewCreateInfo, pAllocator,
                     &pSwapchain->pImageViews[imageIndex]);
         if (VKX_IS_ERROR(result)) {
-            // Destroy swapchain.
-            pSwapchain->pImageViews[imageIndex] = VK_NULL_HANDLE;
-            vkxDestroySwapchain(device, pSwapchain, pAllocator);
+            vkxDestroySwapchain(pSwapchain, pAllocator);
             return result;
         }
     }
+
+    // Create semaphores.
+    uint32_t semaphoreCounts[4] = {imageCount, imageCount, 1, 1};
+    VkSemaphore* pSemaphores[4] = {
+        pSwapchain->pAcquiredSemaphores,
+        pSwapchain->pReleasedSemaphores,
+        &pSwapchain->nextAcquiredSemaphore,
+        &pSwapchain->nextReleasedSemaphore
+    };
+    for (uint32_t paramIndex = 0; paramIndex < 4; 
+                  paramIndex++) {
+        VkResult result =
+            vkxCreateDefaultSemaphores(
+                    device, semaphoreCounts[paramIndex], pAllocator, 
+                    pSemaphores[paramIndex]);
+        if (VKX_IS_ERROR(result)) {
+            vkxDestroySwapchain(pSwapchain, pAllocator);
+            return result;
+        }
+    }
+
+    // Create fences.
+    for (uint32_t imageIndex = 0; imageIndex < imageCount;
+                  imageIndex++) {
+        VkFenceCreateInfo fenceCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .flags = VK_FENCE_CREATE_SIGNALED_BIT // Default signaled
+        };
+        VkResult result = 
+            vkCreateFence(
+                    device, 
+                    &fenceCreateInfo, pAllocator,
+                    &pSwapchain->pFences[imageIndex]);
+        if (VKX_IS_ERROR(result)) {
+            vkxDestroySwapchain(pSwapchain, pAllocator);
+            return result;
+        }
+    }
+
+    // Allocate command buffers.
+    VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = NULL,
+        .commandPool = pSwapchain->commandPool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = pSwapchain->imageCount
+    };
+    VkResult result = vkAllocateCommandBuffers(
+            pSwapchain->device, &commandBufferAllocateInfo,
+            pSwapchain->pCommandBuffers);
+    if (VKX_IS_ERROR(result)) {
+        vkxDestroySwapchain(pSwapchain, pAllocator);
+        return result;
+    }
+
+    // Nullify active state.
+    pSwapchain->activeIndex = UINT32_MAX;
+    pSwapchain->activeAcquiredSemaphore = VK_NULL_HANDLE;
+    pSwapchain->activeReleasedSemaphore = VK_NULL_HANDLE;
+    pSwapchain->activeFence = VK_NULL_HANDLE;
+    pSwapchain->activeCommandBuffer = VK_NULL_HANDLE;
 
     return VK_SUCCESS;
 }
 
 void vkxDestroySwapchain(
-            VkDevice device,
             VkxSwapchain* pSwapchain,
             const VkAllocationCallbacks* pAllocator)
 {
     if (pSwapchain) {
-
-        for (uint32_t imageIndex = 0;
-                      imageIndex < pSwapchain->imageCount; 
+        VkDevice device = pSwapchain->device;
+        for (uint32_t imageIndex = 0; imageIndex < pSwapchain->imageCount; 
                       imageIndex++) {
-
-            // Destroy swapchain image views.
+            // Destroy image views.
             vkDestroyImageView(
                     device,
-                    pSwapchain->pImageViews[imageIndex],
-                    pAllocator);
+                    pSwapchain->pImageViews[imageIndex], pAllocator);
+            // Destroy acquired semaphores.
+            vkDestroySemaphore(
+                    device,
+                    pSwapchain->pAcquiredSemaphores[imageIndex], pAllocator);
+            // Destroy released semaphores.
+            vkDestroySemaphore(
+                    device,
+                    pSwapchain->pReleasedSemaphores[imageIndex], pAllocator);
+            // Destroy fences.
+            vkDestroyFence(
+                    device,
+                    pSwapchain->pFences[imageIndex], pAllocator);
         }
-
+        // Destroy next acquired semaphore.
+        vkDestroySemaphore(
+                device, pSwapchain->nextAcquiredSemaphore, pAllocator);
+        // Destroy next released semaphore.
+        vkDestroySemaphore(
+                device, pSwapchain->nextReleasedSemaphore, pAllocator);
         // Destroy swapchain.
         vkDestroySwapchainKHR(
                 device,
-                pSwapchain->swapchain, 
-                pAllocator);
-
-        // Free swapchain image views.
+                pSwapchain->swapchain, pAllocator);
+        // Free command buffers.
+        free(pSwapchain->pCommandBuffers);
+        // Free fences.
+        free(pSwapchain->pFences);
+        // Free released semaphores.
+        free(pSwapchain->pReleasedSemaphores);
+        // Free acquired semaphores.
+        free(pSwapchain->pAcquiredSemaphores);
+        // Free indices.
+        free(pSwapchain->pIndices);
+        // Free image views.
         free(pSwapchain->pImageViews);
-
-        // Free swapchain images.
+        // Free images.
         free(pSwapchain->pImages);
-
         // Nullify.
         memset(pSwapchain, 0, sizeof(VkxSwapchain));
     }
+}
+
+static void swapSemaphores(VkSemaphore* pSem1, VkSemaphore* pSem2)
+{
+    VkSemaphore tmp = *pSem1;
+    *pSem1 = *pSem2;
+    *pSem2 = tmp;
+}
+
+VkResult vkxSwapchainAcquireNextImage(
+            VkxSwapchain* pSwapchain, uint64_t timeout)
+{
+    // Acquire next image.
+    uint32_t nextImageIndex = 0;
+    VkResult result = vkAcquireNextImageKHR(
+            pSwapchain->device,
+            pSwapchain->swapchain, timeout,
+            pSwapchain->nextAcquiredSemaphore, VK_NULL_HANDLE, 
+            &nextImageIndex);
+    if (result == VK_SUCCESS) {
+        // Swap semaphores.
+        swapSemaphores(
+            &pSwapchain->nextAcquiredSemaphore,
+            &pSwapchain->pAcquiredSemaphores[nextImageIndex]);
+        swapSemaphores(
+            &pSwapchain->nextReleasedSemaphore,
+            &pSwapchain->pReleasedSemaphores[nextImageIndex]);
+
+        // Shuffle indices.
+        for (uint32_t imageIndex = 1; imageIndex < pSwapchain->imageCount; 
+                      imageIndex++) {
+            pSwapchain->pIndices[imageIndex] = 
+            pSwapchain->pIndices[imageIndex - 1];
+        }
+        pSwapchain->pIndices[0] = nextImageIndex;
+
+        // Wait until image is done rendering.
+        vkWaitForFences(
+                pSwapchain->device, 
+                1, &pSwapchain->pFences[nextImageIndex], VK_TRUE, UINT64_MAX);
+        vkResetFences(
+                pSwapchain->device,
+                1, &pSwapchain->pFences[nextImageIndex]);
+
+        // Update active state. 
+        pSwapchain->activeIndex = nextImageIndex;
+        pSwapchain->activeAcquiredSemaphore = 
+            pSwapchain->pAcquiredSemaphores[nextImageIndex];
+        pSwapchain->activeReleasedSemaphore = 
+            pSwapchain->pReleasedSemaphores[nextImageIndex];
+        pSwapchain->activeFence = 
+            pSwapchain->pFences[nextImageIndex];
+        pSwapchain->activeCommandBuffer = 
+            pSwapchain->pCommandBuffers[nextImageIndex];
+    }
+
+    return result;
+}
+
+VkResult vkxSwapchainSubmit(
+            VkxSwapchain* pSwapchain)
+{
+    VkPipelineStageFlags waitDstStageMask =
+            VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    VkSubmitInfo submitInfo = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &pSwapchain->activeAcquiredSemaphore,
+        .pWaitDstStageMask = &waitDstStageMask,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &pSwapchain->activeCommandBuffer,
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = &pSwapchain->activeReleasedSemaphore
+    };
+    VkResult result = vkQueueSubmit(
+            pSwapchain->graphicsQueue, 1, &submitInfo, 
+            pSwapchain->activeFence);
+    return result;
+}
+
+VkResult vkxSwapchainPresent(
+            VkxSwapchain* pSwapchain,
+            uint32_t moreWaitSemaphoreCount,
+            const VkSemaphore* pMoreWaitSemaphores)
+{
+    // Initialize wait semaphores.
+    VkSemaphore* pWaitSemaphores = 
+        VKX_LOCAL_MALLOC_TYPE(VkSemaphore, moreWaitSemaphoreCount + 1);
+    pWaitSemaphores[0] = pSwapchain->activeReleasedSemaphore;
+    memcpy(pWaitSemaphores + 1, pMoreWaitSemaphores, 
+           sizeof(VkSemaphore) * moreWaitSemaphoreCount);
+
+    // Present info.
+    VkPresentInfoKHR presentInfo = {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .pNext = NULL,
+        .waitSemaphoreCount = moreWaitSemaphoreCount + 1,
+        .pWaitSemaphores = pWaitSemaphores,
+        .swapchainCount = 1,
+        .pSwapchains = &pSwapchain->swapchain,
+        .pImageIndices = &pSwapchain->pIndices[0],
+        .pResults = NULL
+    };
+
+    // Present.
+    VkResult result = 
+        vkQueuePresentKHR(pSwapchain->presentQueue, &presentInfo);
+
+    // Free wait semaphores.
+    VKX_LOCAL_FREE(pWaitSemaphores);
+
+    return result;
 }
