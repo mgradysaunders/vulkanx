@@ -104,8 +104,7 @@ VkResult vkxAllocateAndBeginCommandBuffers(
             VkDevice device,
             const VkCommandBufferAllocateInfo* pAllocateInfo,
             const VkCommandBufferBeginInfo* pBeginInfos,
-            VkCommandBuffer* pCommandBuffers) 
-                __attribute__((nonnull(2)));
+            VkCommandBuffer* pCommandBuffers);
 
 /**
  * @brief Flush command buffers.

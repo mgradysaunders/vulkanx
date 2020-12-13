@@ -61,7 +61,7 @@ extern "C" {
  */
 #define VKX_LOCAL_MALLOC VKX_LOCAL_MALLOC_
 
-#define VKX_LOCAL_MALLOC_TYPE(T, n) (T*)VKX_LOCAL_MALLOC(sizeof(T) * (n))
+#define VKX_LOCAL_MALLOC_TYPE(T, n) VKX_LOCAL_MALLOC(sizeof(T) * (n))
 
 #if !DOXYGEN
 #if defined(__GNUC__) && !VKX_NO_ALLOCA
@@ -209,8 +209,7 @@ VkResult vkxAllocateSharedMemory(
             const VkMemoryRequirements* pMemoryRequirements,
             const VkMemoryPropertyFlags* pMemoryPropertyFlags,
             const VkAllocationCallbacks* pAllocator,
-            VkxSharedDeviceMemory* pSharedMemory)
-                __attribute__((nonnull(7)));
+            VkxSharedDeviceMemory* pSharedMemory);
 
 /**
  * @brief Free shared memory.

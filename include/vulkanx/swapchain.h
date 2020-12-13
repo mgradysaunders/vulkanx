@@ -210,8 +210,7 @@ VkResult vkxCreateSwapchain(
             VkSurfaceKHR surface,
             VkExtent2D surfaceExtent,
             const VkAllocationCallbacks* pAllocator,
-            VkxSwapchain* pSwapchain)
-                __attribute__((nonnull(8)));
+            VkxSwapchain* pSwapchain);
 
 /**
  * @brief Recreate swapchain.
@@ -238,8 +237,7 @@ VkResult vkxRecreateSwapchain(
             VkSurfaceKHR surface,
             VkExtent2D surfaceExtent,
             const VkAllocationCallbacks* pAllocator,
-            VkxSwapchain* pSwapchain)
-                __attribute__((nonnull(4)));
+            VkxSwapchain* pSwapchain);
 
 /**
  * @brief Destroy swapchain.

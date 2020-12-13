@@ -93,8 +93,7 @@ VkResult vkxCreateDescriptorSetGroup(
             const VkDescriptorSetLayoutCreateInfo* pSetLayoutCreateInfo,
             uint32_t setCount,
             const VkAllocationCallbacks* pAllocator,
-            VkxDescriptorSetGroup* pSetGroup)
-                __attribute__((nonnull(2, 5)));
+            VkxDescriptorSetGroup* pSetGroup);
 
 /**
  * @brief Destroy descriptor set group.
@@ -181,8 +180,7 @@ VkResult vkxCreateDynamicDescriptorPool(
             VkDevice device,
             const VkDescriptorPoolCreateInfo* pPoolCreateInfo,
             const VkAllocationCallbacks* pAllocator,
-            VkxDynamicDescriptorPool* pDynamicPool)
-                __attribute__((nonnull(2, 4)));
+            VkxDynamicDescriptorPool* pDynamicPool);
 
 /**
  * @brief Allocate dynamic descriptor sets.
@@ -211,8 +209,7 @@ VkResult vkxAllocateDynamicDescriptorSets(
             uint32_t setCount,
             const VkDescriptorSetLayout* pSetLayouts,
             const VkAllocationCallbacks* pAllocator,
-            VkxDynamicDescriptorSet* pDynamicSets)
-                __attribute__((nonnull(2)));
+            VkxDynamicDescriptorSet* pDynamicSets);
 
 /**
  * @brief Free dynamic descriptor sets.
@@ -233,8 +230,7 @@ VkResult vkxFreeDynamicDescriptorSets(
             VkDevice device,
             VkxDynamicDescriptorPool* pDynamicPool,
             uint32_t setCount,
-            VkxDynamicDescriptorSet* pDynamicSets)
-                __attribute__((nonnull(2)));
+            VkxDynamicDescriptorSet* pDynamicSets);
 
 /**
  * @brief Bind dynamic descriptor sets.

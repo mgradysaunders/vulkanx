@@ -98,8 +98,7 @@ VkResult vkxCreateImage(
             const VkImageCreateInfo* pImageCreateInfo,
             const VkMemoryPropertyFlags memoryPropertyFlags,
             const VkAllocationCallbacks* pAllocator,
-            VkxImage* pImage)
-                __attribute__((nonnull(3, 6)));
+            VkxImage* pImage);
 
 /**
  * @brief Destroy image.
@@ -200,8 +199,7 @@ VkResult vkxCreateImageGroup(
             const VkImageCreateInfo* pImageCreateInfos,
             const VkMemoryPropertyFlags* pMemoryPropertyFlags,
             const VkAllocationCallbacks* pAllocator,
-            VkxImageGroup* pImageGroup)
-                __attribute__((nonnull(7)));
+            VkxImageGroup* pImageGroup);
 
 /**
  * @brief Destroy image group.
@@ -255,8 +253,7 @@ VkResult vkxCreateDefaultImageView(
             VkImage image,
             const VkImageCreateInfo* pImageCreateInfo,
             const VkAllocationCallbacks* pAllocator,
-            VkImageView* pImageView)
-                __attribute__((nonnull(3, 5)));
+            VkImageView* pImageView);
 
 /**
  * @brief Create default image views.
@@ -551,8 +548,7 @@ VkResult vkxGetImageData(
             VkImage image,
             const VkxImageDataAccess* pImageDataAccess,
             const VkAllocationCallbacks* pAllocator,
-            void* pData)
-                __attribute__((nonnull(6)));
+            void* pData);
 
 /**
  * @brief Set image data via temporary staging buffer.
@@ -601,8 +597,7 @@ VkResult vkxSetImageData(
             VkImage image,
             const VkxImageDataAccess* pImageDataAccess,
             const void* pData,
-            const VkAllocationCallbacks* pAllocator)
-                __attribute__((nonnull(6)));
+            const VkAllocationCallbacks* pAllocator);
 
 /**@}*/
 

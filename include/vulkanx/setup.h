@@ -100,8 +100,7 @@ VkResult vkxCreateInstance(
             const VkAllocationCallbacks* pAllocator,
             VkBool32* pRequestedLayersEnabled,
             VkBool32* pRequestedExtensionsEnabled,
-            VkInstance* pInstance)
-                __attribute__((nonnull(1, 5)));
+            VkInstance* pInstance);
 
 /**
  * @brief Physical device select info.

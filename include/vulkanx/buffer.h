@@ -98,8 +98,7 @@ VkResult vkxCreateBuffer(
             const VkBufferCreateInfo* pBufferCreateInfo,
             const VkMemoryPropertyFlags memoryPropertyFlags,
             const VkAllocationCallbacks* pAllocator,
-            VkxBuffer* pBuffer)
-                __attribute__((nonnull(3, 6)));
+            VkxBuffer* pBuffer);
 
 /**
  * @brief Destroy buffer.
@@ -201,8 +200,7 @@ VkResult vkxCreateBufferGroup(
             const VkBufferCreateInfo* pBufferCreateInfos,
             const VkMemoryPropertyFlags* pMemoryPropertyFlags,
             const VkAllocationCallbacks* pAllocator,
-            VkxBufferGroup* pBufferGroup)
-                __attribute__((nonnull(7)));
+            VkxBufferGroup* pBufferGroup);
 
 /**
  * @brief Destroy buffer group.
@@ -339,8 +337,7 @@ VkResult vkxGetBufferData(
             VkBuffer buffer,
             const VkxBufferDataAccess* pBufferDataAccess,
             const VkAllocationCallbacks* pAllocator,
-            void* pData)
-                __attribute__((nonnull(6)));
+            void* pData);
 
 /**
  * @brief Set buffer data via temporary staging buffer.
@@ -386,8 +383,7 @@ VkResult vkxSetBufferData(
             VkBuffer buffer,
             const VkxBufferDataAccess* pBufferDataAccess,
             const void* pData,
-            const VkAllocationCallbacks* pAllocator)
-                __attribute__((nonnull(6)));
+            const VkAllocationCallbacks* pAllocator);
 
 /**@}*/
 
