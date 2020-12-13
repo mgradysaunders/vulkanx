@@ -139,6 +139,19 @@ typedef struct VkxSwapchain_
     /**@}*/
 
     /**
+     * @name Swapchain latent state
+     */
+    /**@{*/
+
+    /** @brief Render pass. */
+    VkRenderPass renderPass;
+
+    /** @brief Framebuffers. */
+    VkFramebuffer* pFramebuffers;
+
+    /**@}*/
+
+    /**
      * @name Swapchain active state
      */
     /**@{*/
@@ -157,6 +170,9 @@ typedef struct VkxSwapchain_
 
     /** @brief Active command buffer. */
     VkCommandBuffer activeCommandBuffer;
+
+    /** @brief Active framebuffer. */
+    VkFramebuffer activeFramebuffer;
 
     /**@}*/
 }
@@ -260,6 +276,14 @@ VkResult vkxRecreateSwapchain(
  */
 void vkxDestroySwapchain(
             VkxSwapchain* pSwapchain,
+            const VkAllocationCallbacks* pAllocator);
+
+/**
+ * @brief Setup render pass.
+ */
+VkResult vkxSwapchainSetupRenderPass(
+            VkxSwapchain* pSwapchain,
+            const VkRenderPassCreateInfo* pCreateInfo,
             const VkAllocationCallbacks* pAllocator);
 
 /**

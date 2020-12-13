@@ -48,7 +48,7 @@ static VkResult selectSwapchainPresentMode(
         return VK_ERROR_INCOMPATIBLE_DRIVER;
     }
     pPresentModes = 
-        VKX_LOCAL_MALLOC_TYPE(VkPresentModeKHR, presentModeCount);
+        VKX_LOCAL_MALLOC(sizeof(VkPresentModeKHR) * presentModeCount);
     {
         // Retrieve present modes.
         VkResult result = 
@@ -112,7 +112,7 @@ static VkResult selectSwapchainSurfaceFormat(
     vkGetPhysicalDeviceSurfaceFormatsKHR(
             physicalDevice, surface, &surfaceFormatCount, NULL);
     pSurfaceFormats =
-        VKX_LOCAL_MALLOC_TYPE(VkSurfaceFormatKHR, surfaceFormatCount);
+        VKX_LOCAL_MALLOC(sizeof(VkSurfaceFormatKHR) * surfaceFormatCount);
     {
         // Retrieve surface formats.
         VkResult result = 
@@ -419,6 +419,10 @@ VkResult vkxRecreateSwapchain(
         vkDestroyFence(
                 device,
                 pSwapchain->pFences[imageIndex], pAllocator);
+        // Destroy framebuffers.
+        vkDestroyFramebuffer(
+                device,
+                pSwapchain->pFramebuffers[imageIndex], pAllocator);
     }
     // Destroy next acquired semaphore.
     vkDestroySemaphore(
@@ -468,6 +472,10 @@ VkResult vkxRecreateSwapchain(
         pSwapchain->pCommandBuffers = 
                 realloc(pSwapchain->pCommandBuffers,
                         imageCount * sizeof(VkCommandBuffer));
+        // Reallocate framebuffers.
+        pSwapchain->pFramebuffers = 
+                realloc(pSwapchain->pFramebuffers,
+                        imageCount * sizeof(VkFramebuffer));
     }
     // Nullify images.
     memset(pSwapchain->pImages, 0, imageCount * sizeof(VkImage));
@@ -490,6 +498,9 @@ VkResult vkxRecreateSwapchain(
     // Nullify command buffers.
     memset(pSwapchain->pCommandBuffers, 
            0, imageCount * sizeof(VkCommandBuffer));
+    // Nullify framebuffers.
+    memset(pSwapchain->pFramebuffers, 
+           0, imageCount * sizeof(VkFramebuffer));
     
     {
         // Get swapchain images.
@@ -595,12 +606,39 @@ VkResult vkxRecreateSwapchain(
         return result;
     }
 
+    // Is render pass setup?
+    if (pSwapchain->renderPass != VK_NULL_HANDLE) {
+        // Create framebuffers.
+        for (uint32_t imageIndex = 0; imageIndex < imageCount;
+                      imageIndex++) {
+            VkFramebufferCreateInfo framebufferCreateInfo = {
+                .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+                .pNext = NULL,
+                .flags = 0,
+                .renderPass = pSwapchain->renderPass,
+                .attachmentCount = 1,
+                .pAttachments = &pSwapchain->pImageViews[imageIndex],
+                .width = pSwapchain->imageExtent.width,
+                .height = pSwapchain->imageExtent.height,
+                .layers = 1
+            };
+            VkResult result = vkCreateFramebuffer(
+                    device, &framebufferCreateInfo, NULL, 
+                    &pSwapchain->pFramebuffers[imageIndex]);
+            if (result != VK_SUCCESS) {
+                vkxDestroySwapchain(pSwapchain, pAllocator);
+                return result;
+            }
+        }
+    }
+
     // Nullify active state.
     pSwapchain->activeIndex = UINT32_MAX;
     pSwapchain->activeAcquiredSemaphore = VK_NULL_HANDLE;
     pSwapchain->activeReleasedSemaphore = VK_NULL_HANDLE;
     pSwapchain->activeFence = VK_NULL_HANDLE;
     pSwapchain->activeCommandBuffer = VK_NULL_HANDLE;
+    pSwapchain->activeFramebuffer = VK_NULL_HANDLE;
 
     return VK_SUCCESS;
 }
@@ -629,6 +667,10 @@ void vkxDestroySwapchain(
             vkDestroyFence(
                     device,
                     pSwapchain->pFences[imageIndex], pAllocator);
+            // Destroy framebuffer.
+            vkDestroyFramebuffer(
+                    device,
+                    pSwapchain->pFramebuffers[imageIndex], pAllocator);
         }
         // Destroy next acquired semaphore.
         vkDestroySemaphore(
@@ -636,10 +678,23 @@ void vkxDestroySwapchain(
         // Destroy next released semaphore.
         vkDestroySemaphore(
                 device, pSwapchain->nextReleasedSemaphore, pAllocator);
+        // Free command buffers.
+        vkFreeCommandBuffers(
+                device,
+                pSwapchain->commandPool, pSwapchain->imageCount,
+                pSwapchain->pCommandBuffers);
+        // Destroy command pool.
+        vkDestroyCommandPool(
+                device, pSwapchain->commandPool, pAllocator);
+        // Destroy render pass.
+        vkDestroyRenderPass(
+                device, pSwapchain->renderPass, pAllocator);
         // Destroy swapchain.
         vkDestroySwapchainKHR(
                 device,
                 pSwapchain->swapchain, pAllocator);
+        // Free framebuffers.
+        free(pSwapchain->pFramebuffers);
         // Free command buffers.
         free(pSwapchain->pCommandBuffers);
         // Free fences.
@@ -657,6 +712,61 @@ void vkxDestroySwapchain(
         // Nullify.
         memset(pSwapchain, 0, sizeof(VkxSwapchain));
     }
+}
+
+VkResult vkxSwapchainSetupRenderPass(
+            VkxSwapchain* pSwapchain,
+            const VkRenderPassCreateInfo* pCreateInfo,
+            const VkAllocationCallbacks* pAllocator)
+{
+    VkResult result = vkCreateRenderPass(
+                pSwapchain->device, 
+                pCreateInfo, pAllocator, &pSwapchain->renderPass);
+    if (result != VK_SUCCESS) {
+        return result;
+    }
+
+    // Create framebuffers.
+    for (uint32_t imageIndex = 0; imageIndex < pSwapchain->imageCount;
+                  imageIndex++) {
+        VkFramebufferCreateInfo framebufferCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .renderPass = pSwapchain->renderPass,
+            .attachmentCount = 1,
+            .pAttachments = &pSwapchain->pImageViews[imageIndex],
+            .width = pSwapchain->imageExtent.width,
+            .height = pSwapchain->imageExtent.height,
+            .layers = 1
+        };
+        VkResult result = vkCreateFramebuffer(
+                pSwapchain->device, &framebufferCreateInfo, NULL, 
+                &pSwapchain->pFramebuffers[imageIndex]);
+        if (result != VK_SUCCESS) {
+            for (uint32_t imageIndex2 = 0; imageIndex2 < imageIndex;
+                          imageIndex2++) {
+                // Destroy framebuffers.
+                vkDestroyFramebuffer(
+                        pSwapchain->device,
+                        pSwapchain->pFramebuffers[imageIndex2], 
+                        pAllocator);
+                // Nullify.
+                pSwapchain->pFramebuffers[imageIndex2] = VK_NULL_HANDLE;
+            }
+            // Destroy render pass.
+            vkDestroyRenderPass(
+                    pSwapchain->device,
+                    pSwapchain->renderPass,
+                    pAllocator);
+            // Nullify.
+            pSwapchain->renderPass = VK_NULL_HANDLE;
+            // Failure.
+            return result;
+        }
+    }
+
+    return VK_SUCCESS;
 }
 
 static void swapSemaphores(VkSemaphore* pSem1, VkSemaphore* pSem2)
@@ -693,7 +803,7 @@ VkResult vkxSwapchainAcquireNextImage(
         }
         pSwapchain->pIndices[0] = nextImageIndex;
 
-        // Wait until image is done rendering.
+        // Wait until image is actually available for rendering. 
         vkWaitForFences(
                 pSwapchain->device, 
                 1, &pSwapchain->pFences[nextImageIndex], VK_TRUE, UINT64_MAX);
@@ -711,6 +821,8 @@ VkResult vkxSwapchainAcquireNextImage(
             pSwapchain->pFences[nextImageIndex];
         pSwapchain->activeCommandBuffer = 
             pSwapchain->pCommandBuffers[nextImageIndex];
+        pSwapchain->activeFramebuffer = 
+            pSwapchain->pFramebuffers[nextImageIndex];
     }
 
     return result;
@@ -743,11 +855,11 @@ VkResult vkxSwapchainPresent(
             const VkSemaphore* pMoreWaitSemaphores)
 {
     // Initialize wait semaphores.
-    VkSemaphore* pWaitSemaphores = 
-        VKX_LOCAL_MALLOC_TYPE(VkSemaphore, moreWaitSemaphoreCount + 1);
+    VkSemaphore* pWaitSemaphores = VKX_LOCAL_MALLOC(
+            sizeof(VkSemaphore) * (moreWaitSemaphoreCount + 1));
     pWaitSemaphores[0] = pSwapchain->activeReleasedSemaphore;
-    memcpy(pWaitSemaphores + 1, pMoreWaitSemaphores, 
-           sizeof(VkSemaphore) * moreWaitSemaphoreCount);
+    memcpy(&pWaitSemaphores[1], pMoreWaitSemaphores, 
+            sizeof(VkSemaphore) * moreWaitSemaphoreCount);
 
     // Present info.
     VkPresentInfoKHR presentInfo = {

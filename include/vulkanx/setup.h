@@ -104,17 +104,39 @@ VkResult vkxCreateInstance(
 
 /**
  * @brief Physical device select info.
+ *
+ * This struct can be used to control how physical device selection 
+ * is carried out by `vkxSelectPhysicalDevice`. By default, the implementation
+ * considers every available device and tries to select the most performant 
+ * device with the most available features. 
  */
 typedef struct VkxPhysicalDeviceSelectInfo_
 {
-    /** @brief _Optional_. Requested name. */
+    /** @brief _Optional_. Requested name. 
+     *
+     * If non-`NULL`, physical device selection looks for the device with 
+     * this specific name. If no such device exists, the implementation
+     * returns `VK_NULL_HANDLE`.
+     */
     const char* pRequestedName;
 
-    /** @brief _Optional_. Requested features. */
+    /** @brief _Optional_. Requested features.
+     *
+     * If non-`NULL`, physical device selection only considers these
+     * requested features. The implementation does not require that every
+     * requested feature is supported by a device, but rather seeks the device
+     * that supports the most requested features.
+     */
     const VkPhysicalDeviceFeatures* pRequestedFeatures;
 
-    /** @brief _Optional_. Is physical device okay for selection? */
-    VkBool32 (*pIsPhysicalDeviceOkay)(VkPhysicalDevice, void*);
+    /** @brief _Optional_. Is physical device ok for selection? 
+     *
+     * If non-`NULL`, physical device selection only considers physical 
+     * devices where this callback returns `VK_TRUE`. If every candidate
+     * device is rejected by this callback, the implementation returns 
+     * `VK_NULL_HANDLE`.
+     */
+    VkBool32 (*pIsPhysicalDeviceOk)(VkPhysicalDevice, void*);
 
     /** @brief _Optional_. User data for callback. */
     void* pUserData;
@@ -232,6 +254,9 @@ VkxDeviceQueueFamily;
 
 /**
  * @brief Device queue family create info.
+ *
+ * This struct specifies the requirements for a queue family in 
+ * `VkxDevice`. 
  */
 typedef struct VkxDeviceQueueFamilyCreateInfo_
 {
@@ -253,7 +278,7 @@ typedef struct VkxDeviceQueueFamilyCreateInfo_
     /** @brief Command pool count. */
     uint32_t commandPoolCount;
 
-    /** @brief Command pool create falgs. */
+    /** @brief Command pool create flags. */
     const VkCommandPoolCreateFlags* pCommandPoolCreateFlags;
 }
 VkxDeviceQueueFamilyCreateInfo;
@@ -304,6 +329,18 @@ VkxDeviceCreateInfo;
 
 /**
  * @brief Create device.
+ *
+ * @param[in] instance
+ * Instance.
+ *
+ * @param[in] pCreateInfo
+ * Create info.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pDevice
+ * Device.
  */
 VkResult vkxCreateDevice(
             VkInstance instance,
@@ -313,6 +350,12 @@ VkResult vkxCreateDevice(
 
 /**
  * @brief Destroy device.
+ *
+ * @param[inout] pDevice
+ * Device.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
  */
 void vkxDestroyDevice(
             VkxDevice* pDevice, 

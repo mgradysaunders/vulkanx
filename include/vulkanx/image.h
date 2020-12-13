@@ -474,29 +474,19 @@ VkResult vkxCopyBufferToImage(
  */
 typedef struct VkxImageDataAccess_
 {
-    /**
-     * @brief Layout.
-     */
+    /** @brief Layout. */
     VkImageLayout layout;
 
-    /**
-     * @brief Subresource layers.
-     */
+    /** @brief Subresource layers. */
     VkImageSubresourceLayers subresourceLayers;
 
-    /**
-     * @brief Offset.
-     */
+    /** @brief Offset. */
     VkOffset3D offset;
 
-    /**
-     * @brief Extent.
-     */
+    /** @brief Extent. */
     VkExtent3D extent;
 
-    /**
-     * @brief Size in bytes.
-     */
+    /** @brief Size in bytes. */
     VkDeviceSize size;
 }
 VkxImageDataAccess;

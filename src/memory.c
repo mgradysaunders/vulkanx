@@ -151,8 +151,7 @@ VkResult vkxAllocateSharedMemory(
 
     // Allocate memory requirement type indices.
     uint32_t* pMemoryRequirementTypeIndices = 
-        (uint32_t*)VKX_LOCAL_MALLOC(
-                sizeof(uint32_t) * memoryRequirementCount);
+        VKX_LOCAL_MALLOC(sizeof(uint32_t) * memoryRequirementCount);
 
     // Iterate requirements, select memory type index for
     // each requirement which supports the most other requirements.
@@ -201,8 +200,7 @@ VkResult vkxAllocateSharedMemory(
     // Allocate shared memory views.
     pSharedMemory->memoryViewCount = memoryRequirementCount;
     pSharedMemory->pMemoryViews = 
-        (VkxDeviceMemoryView*)malloc(
-                sizeof(VkxDeviceMemoryView) * memoryRequirementCount);
+        malloc(sizeof(VkxDeviceMemoryView) * memoryRequirementCount);
 
     // Initialize unique memory count.
     pSharedMemory->uniqueMemoryCount = 0;
@@ -253,8 +251,7 @@ VkResult vkxAllocateSharedMemory(
 
     // Allocate unique memories array.
     pSharedMemory->pUniqueMemories = 
-        (VkDeviceMemory*)malloc(
-                sizeof(VkDeviceMemory) * pSharedMemory->uniqueMemoryCount);
+        malloc(sizeof(VkDeviceMemory) * pSharedMemory->uniqueMemoryCount);
     for (uint32_t uniqueMemoryIndex = 0;
                   uniqueMemoryIndex < pSharedMemory->uniqueMemoryCount;
                   uniqueMemoryIndex++) {

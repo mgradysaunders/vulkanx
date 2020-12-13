@@ -121,6 +121,11 @@ void vkxCreateSDLWindowOrExit(
  */
 void vkxDestroySDLWindow(VkxSDLWindow* pWindow);
 
+/**
+ * @brief Resize swapchain, or report error and exit.
+ */
+void vkxSDLWindowResizeSwapchainOrExit(VkxSDLWindow* pWindow);
+
 /**@}*/
 
 #ifdef __cplusplus

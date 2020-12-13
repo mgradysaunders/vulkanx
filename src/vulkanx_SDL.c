@@ -43,7 +43,7 @@ static char* deepCopyString(const char* str)
     }
 }
 
-static VkBool32 isPhysicalDeviceOkayForSDL(
+static VkBool32 isPhysicalDeviceOkForSDL(
                 VkPhysicalDevice physicalDevice, void* pUserData)
 {
     uint32_t queueFamilyCount = 0;
@@ -98,8 +98,8 @@ void vkxCreateSDLWindowOrExit(
     // then get SDL extension names.
     uint32_t extensionCount = requiredExtensionCount;
     const char** ppExtensionNames =
-            VKX_LOCAL_MALLOC_TYPE(const char*, 
-            requiredExtensionCount + requestedExtensionCount);
+            VKX_LOCAL_MALLOC(sizeof(const char*) *
+            (requiredExtensionCount + requestedExtensionCount));
     if (!SDL_Vulkan_GetInstanceExtensions(
                 pWindow->window, &extensionCount, ppExtensionNames)) {
         fprintf(stderr, "failed to get SDL Vulkan instance extensions\n");
@@ -135,9 +135,9 @@ void vkxCreateSDLWindowOrExit(
 
     // Allocate layer and extension enabled flags.
     VkBool32* pLayersEnabled = 
-            VKX_LOCAL_MALLOC_TYPE(VkBool32, layerCount);
+            VKX_LOCAL_MALLOC(sizeof(VkBool32) * layerCount);
     VkBool32* pExtensionsEnabled = 
-            VKX_LOCAL_MALLOC_TYPE(VkBool32, extensionCount);
+            VKX_LOCAL_MALLOC(sizeof(VkBool32) * extensionCount);
     {
         // Create instance.
         VkxInstanceCreateInfo instanceCreateInfo;
@@ -220,7 +220,7 @@ void vkxCreateSDLWindowOrExit(
         VkxPhysicalDeviceSelectInfo physicalDeviceSelectInfo = {
             .pRequestedName = NULL,
             .pRequestedFeatures = NULL,
-            .pIsPhysicalDeviceOkay = isPhysicalDeviceOkayForSDL,
+            .pIsPhysicalDeviceOk = isPhysicalDeviceOkForSDL,
             .pUserData = &pWindow->swapchainSurface
         };
         // Use 1 graphics queue family, with up to 4 queues,
@@ -300,30 +300,23 @@ void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
                       nameIndex < pWindow->enabledLayerCount; nameIndex++)
             free(pWindow->ppEnabledLayerNames[nameIndex]);
         free(pWindow->ppEnabledLayerNames);
-
         // Free extension names.
         for (uint32_t nameIndex = 0; 
                       nameIndex < pWindow->enabledExtensionCount; nameIndex++)
             free(pWindow->ppEnabledExtensionNames[nameIndex]);
         free(pWindow->ppEnabledExtensionNames);
-
         // Destroy swapchain.
         vkxDestroySwapchain(
                 &pWindow->swapchain, NULL);
-
         // Destroy swapchain surface.
         vkDestroySurfaceKHR(
                 pWindow->instance, pWindow->swapchainSurface, NULL);
-
         // Destroy device.
         vkxDestroyDevice(&pWindow->device, NULL);
-
         // Destroy instance.
         vkDestroyInstance(pWindow->instance, NULL);
-
         // Destroy window.
         SDL_DestroyWindow(pWindow->window);
-
         // Nullify.
         memset(pWindow, 0, sizeof(VkxSDLWindow));
     }

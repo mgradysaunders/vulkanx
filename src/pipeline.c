@@ -26,14 +26,22 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 /*-*-*-*-*-*-*/
+#include <assert.h>
 #include <string.h>
 #include <vulkanx/pipeline.h>
+
+static void* deepCopy(const void* pSrc, size_t size)
+{
+    void* pDst = malloc(size);
+    memcpy(pDst, pSrc, size);
+    return pDst;
+}
 
 static VkGraphicsPipelineCreateInfo convertCreateInfo(
             const VkxGraphicsPipelineCreateInfo* pCreateInfo)
 {
-    // Malloc with given type.
-    #define MALLOC_TYPE(Type, name) Type* name = malloc(sizeof(Type))
+    assert(pCreateInfo);
+    assert(pCreateInfo->pInputState);
 
     // Create info.
     VkGraphicsPipelineCreateInfo createInfo = {
@@ -72,10 +80,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
         .pVertexAttributeDescriptions =
             pCreateInfo->pInputState->pAttributes
     };
-    MALLOC_TYPE(VkPipelineVertexInputStateCreateInfo, pVertexInputState);
-    memcpy(pVertexInputState, 
-           &vertexInputState, sizeof(vertexInputState));
-    createInfo.pVertexInputState = pVertexInputState;
+    createInfo.pVertexInputState =
+            deepCopy(&vertexInputState, sizeof(vertexInputState));
 
     // Input assembly state.
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = {
@@ -86,10 +92,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
         .primitiveRestartEnable = 
             pCreateInfo->pInputState->primitiveRestartEnable
     };
-    MALLOC_TYPE(VkPipelineInputAssemblyStateCreateInfo, pInputAssemblyState);
-    memcpy(pInputAssemblyState, 
-           &inputAssemblyState, sizeof(inputAssemblyState));
-    createInfo.pInputAssemblyState = pInputAssemblyState;
+    createInfo.pInputAssemblyState =
+            deepCopy(&inputAssemblyState, sizeof(inputAssemblyState));
 
     // Tessellation state.
     if (pCreateInfo->pInputState->patchControlPoints > 0) {
@@ -99,16 +103,14 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
             .flags = 0,
             .patchControlPoints = pCreateInfo->pInputState->patchControlPoints
         };
-        MALLOC_TYPE(VkPipelineTessellationStateCreateInfo, pTessellationState);
-        memcpy(pTessellationState,
-               &tessellationState, sizeof(tessellationState));
-        createInfo.pTessellationState = pTessellationState;
+        createInfo.pTessellationState =
+               deepCopy(&tessellationState, sizeof(tessellationState));
     }
 
     // Viewport state.
     if (pCreateInfo->viewportCount > 0) {
-        VkRect2D* pScissors = malloc(sizeof(VkRect2D) * 
-                pCreateInfo->viewportCount);
+        VkRect2D* pScissors = malloc(
+                sizeof(VkRect2D) * pCreateInfo->viewportCount);
         // Viewport scissors provided?
         if (pCreateInfo->pViewportScissors) {
             // Copy.
@@ -139,10 +141,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
             .scissorCount = pCreateInfo->viewportCount,
             .pScissors = pScissors
         };
-        MALLOC_TYPE(VkPipelineViewportStateCreateInfo, pViewportState);
-        memcpy(pViewportState, 
-               &viewportState, sizeof(viewportState));
-        createInfo.pViewportState = pViewportState;
+        createInfo.pViewportState =
+                deepCopy(&viewportState, sizeof(viewportState));
     }
 
     // Rasterization state.
@@ -175,10 +175,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
             pCreateInfo->pDepthState->depthBiasSlopeFactor : 0.0f,
         .lineWidth = pCreateInfo->pInputState->lineWidth
     };
-    MALLOC_TYPE(VkPipelineRasterizationStateCreateInfo, pRasterizationState);
-    memcpy(pRasterizationState,
-           &rasterizationState, sizeof(rasterizationState));
-    createInfo.pRasterizationState = pRasterizationState;
+    createInfo.pRasterizationState =
+            deepCopy(&rasterizationState, sizeof(rasterizationState));
 
     // Multisample state.
     if (pCreateInfo->pMultisampleState || 
@@ -210,10 +208,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
                 pCreateInfo->pMultisampleState ?
                 pCreateInfo->pMultisampleState->alphaToOneEnable : VK_FALSE
         };
-        MALLOC_TYPE(VkPipelineMultisampleStateCreateInfo, pMultisampleState);
-        memcpy(pMultisampleState,
-               &multisampleState, sizeof(multisampleState));
-        createInfo.pMultisampleState = pMultisampleState;
+        createInfo.pMultisampleState =
+                deepCopy(&multisampleState, sizeof(multisampleState));
     }
 
     // Depth/stencil state.
@@ -257,10 +253,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
                 pCreateInfo->pDepthState ?
                 pCreateInfo->pDepthState->maxDepthBounds : 0.0f
         };
-        MALLOC_TYPE(VkPipelineDepthStencilStateCreateInfo, pDepthStencilState);
-        memcpy(pDepthStencilState,
-               &depthStencilState, sizeof(depthStencilState));
-        createInfo.pDepthStencilState = pDepthStencilState;
+        createInfo.pDepthStencilState =
+                deepCopy(&depthStencilState, sizeof(depthStencilState));
     }
 
     // Color blend state.
@@ -279,10 +273,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
             pCreateInfo->blendConstants[3]
         }
     };
-    MALLOC_TYPE(VkPipelineColorBlendStateCreateInfo, pColorBlendState);
-    memcpy(pColorBlendState,
-           &colorBlendState, sizeof(colorBlendState));
-    createInfo.pColorBlendState = pColorBlendState;
+    createInfo.pColorBlendState =
+            deepCopy(&colorBlendState, sizeof(colorBlendState));
 
     // Dynamic state.
     if (pCreateInfo->dynamicStateCount > 0) {
@@ -293,10 +285,8 @@ static VkGraphicsPipelineCreateInfo convertCreateInfo(
             .dynamicStateCount = pCreateInfo->dynamicStateCount,
             .pDynamicStates = pCreateInfo->pDynamicStates
         };
-        MALLOC_TYPE(VkPipelineDynamicStateCreateInfo, pDynamicState);
-        memcpy(pDynamicState,
-               &dynamicState, sizeof(dynamicState));
-        createInfo.pDynamicState = pDynamicState;
+        createInfo.pDynamicState =
+                deepCopy(&dynamicState, sizeof(dynamicState));
     }
 
     return createInfo;
@@ -309,10 +299,16 @@ VkResult vkxCreateGraphicsPipelines(
             const VkAllocationCallbacks* pAllocator,
             VkPipeline* pPipelines)
 {
+    if (createInfoCount == 0) {
+        return VK_SUCCESS;
+    }
+    assert(pCreateInfos);
+    assert(pPipelines);
+
     // Allocate and initialize actual create infos.
     VkGraphicsPipelineCreateInfo* pActualCreateInfos = 
-            VKX_LOCAL_MALLOC_TYPE(
-            VkGraphicsPipelineCreateInfo, createInfoCount);
+            VKX_LOCAL_MALLOC(
+            sizeof(VkGraphicsPipelineCreateInfo) * createInfoCount);
     for (uint32_t createInfoIndex = 0; createInfoIndex < createInfoCount;
                   createInfoIndex++)
         pActualCreateInfos[createInfoIndex] = 

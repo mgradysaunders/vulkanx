@@ -45,6 +45,17 @@ extern "C" {
 
 /**
  * @brief Graphics pipeline input state.
+ *
+ * This struct combines 
+ * - `VkPipelineVertexInputStateCreateInfo`,
+ * - `VkPipelineInputAssemblyStateCreateInfo`, 
+ * - `VkPipelineTessellationStateCreateInfo`, and
+ * - partially `VkPipelineRasterizationStateCreateInfo`. 
+ *
+ * This aims to capture the entirety of how graphics primitives are 
+ * input to and rasterized by Vulkan. Hence, this includes the vertex
+ * bindings and attributes, the primitive topology and culling options, 
+ * and the number of patch control points if tessellation is used.
  */
 typedef struct VkxGraphicsPipelineInputState_
 {
@@ -88,6 +99,10 @@ VkxGraphicsPipelineInputState;
 
 /**
  * @brief Graphics pipeline depth state.
+ *
+ * This struct combines 
+ * - partially `VkPipelineDepthStencilStateCreateInfo`, and
+ * - partially `VkPipelineRasterizationStateCreateInfo`.
  */
 typedef struct VkxGraphicsPipelineDepthState_
 {
@@ -138,6 +153,12 @@ VkxGraphicsPipelineStencilState;
 
 /**
  * @brief Graphics pipeline multisample state.
+ *
+ * This struct wraps `VkPipelineMultisampleStateCreateInfo`. It is 
+ * nearly identical, but inlines `pSampleMask` as `sampleMask` since it
+ * should never be a pointer to more than two values. Also, this may be
+ * left out of `VkxGraphicsPipelineCreateInfo`, in which case an effective
+ * _no multisampling_ default struct is used.
  */
 typedef struct VkxGraphicsPipelineMultisampleState_
 {
@@ -166,6 +187,26 @@ VkxGraphicsPipelineMultisampleState;
 
 /**
  * @brief Graphics pipeline create info.
+ *
+ * This struct replaces `VkGraphicsPipelineCreateInfo`. This uses 
+ * - `VkxGraphicsPipelineInputState`, 
+ * - `VkxGraphicsPipelineDepthState`,
+ * - `VkxGraphicsPipelineStencilState`, and
+ * - `VkxGraphicsPipelineMultisampleState`
+ *
+ * to replace 
+ * - `VkPipelineVertexInputStateCreateInfo`,
+ * - `VkPipelineInputAssemblyStateCreateInfo`,
+ * - `VkPipelineTessellationStateCreateInfo`,
+ * - `VkPipelineDepthStencilStateCreateInfo`,
+ * - `VkPipelineRasterizationStateCreateInfo`, and
+ * - `VkPipelineMultisampleStateCreateInfo`.
+ *
+ * This further inlines 
+ * `VkPipelineViewportStateCreateInfo`,
+ * `VkPipelineColorBlendStateCreateInfo`, and 
+ * `VkPipelineDynamicStateCreateInfo`, thus reducing the number of 
+ * intermediate structs from 9 to 4. 
  */
 typedef struct VkxGraphicsPipelineCreateInfo_
 {
@@ -187,6 +228,21 @@ typedef struct VkxGraphicsPipelineCreateInfo_
     /** @brief _Optional_. Multisample state. */
     const VkxGraphicsPipelineMultisampleState* pMultisampleState;
 
+    /**
+     * @name Viewport state
+     *
+     * Note that `VkPipelineViewportStateCreateInfo` has another field 
+     * `scissorCount` to specify the number of scissors `pScissors`, which
+     * is required to be equivalent to `viewportCount`. This struct makes 
+     * this requirement implicit by removing `scissorCount` and renaming 
+     * `pScissors` to `pViewportScissors`. 
+     *
+     * For convenience, `pViewportScissors` is optional. If `NULL`, the 
+     * implementation initializes scissors to match each viewport in 
+     * `pViewports`. 
+     */
+    /**@{*/
+
     /** @brief Viewport count. */
     uint32_t viewportCount;
 
@@ -195,6 +251,13 @@ typedef struct VkxGraphicsPipelineCreateInfo_
 
     /** @brief _Optional_. Viewport scissors. */
     const VkRect2D* pViewportScissors;
+
+    /**@}*/
+
+    /**
+     * @name Color blend state
+     */
+    /**@{*/
 
     /** @brief Logic op enable? */
     VkBool32 logicOpEnable;
@@ -211,11 +274,20 @@ typedef struct VkxGraphicsPipelineCreateInfo_
     /** @brief Blend constants. */
     float blendConstants[4];
 
+    /**@}*/
+
+    /**
+     * @name Dynamic state
+     */
+    /**@{*/
+
     /** @brief Dynamic state count. */
     uint32_t dynamicStateCount;
 
     /** @brief Dynamic states. */
     const VkDynamicState* pDynamicStates;
+
+    /**@}*/
 
     /** @brief Layout. */
     VkPipelineLayout layout;
@@ -233,6 +305,28 @@ VkxGraphicsPipelineCreateInfo;
 
 /**
  * @brief Create graphics pipelines.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] createInfoCount
+ * Create info count.
+ *
+ * @param[in] pCreateInfos
+ * Create infos.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ *
+ * @param[out] pPipelines
+ * Pipelines.
+ *
+ * @pre
+ * - `device` is valid
+ * - `pCreateInfos` points to `createInfoCount` values
+ * - `pPipelines` points to `createInfoCount` values 
+ * - `pPipelines` is `NULL` only if `createInfoCount` is zero, in which
+ * case the implementation immediately returns `VK_SUCCESS`
  */
 VkResult vkxCreateGraphicsPipelines(
             VkDevice device,

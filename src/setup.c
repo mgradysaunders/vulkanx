@@ -53,8 +53,7 @@ VkResult vkxCreateInstance(
     VkLayerProperties* pLayerProperties = NULL;
     vkEnumerateInstanceLayerProperties(&layerPropertyCount, NULL);
     pLayerProperties = 
-        (VkLayerProperties*)VKX_LOCAL_MALLOC(
-                sizeof(VkLayerProperties) * layerPropertyCount);
+        VKX_LOCAL_MALLOC(sizeof(VkLayerProperties) * layerPropertyCount);
     {
         // Retrieve layer properties.
         VkResult result = 
@@ -75,8 +74,8 @@ VkResult vkxCreateInstance(
             NULL, 
             &extensionPropertyCount, NULL);
     pExtensionProperties = 
-        (VkExtensionProperties*)VKX_LOCAL_MALLOC(
-                sizeof(VkExtensionProperties) * extensionPropertyCount);
+        VKX_LOCAL_MALLOC(sizeof(VkExtensionProperties) * 
+                extensionPropertyCount);
     {
         // Retrieve extension properties.
         VkResult result = 
@@ -96,14 +95,12 @@ VkResult vkxCreateInstance(
     // Enabled layers.
     uint32_t enabledLayerCount = 0;
     const char** ppEnabledLayerNames = 
-        (const char**)VKX_LOCAL_MALLOC(
-                sizeof(const char*) * requestedLayerCount);
+        VKX_LOCAL_MALLOC(sizeof(const char*) * requestedLayerCount);
 
     // Enabled extensions.
     uint32_t enabledExtensionCount = 0;
     const char** ppEnabledExtensionNames = 
-        (const char**)VKX_LOCAL_MALLOC(
-                sizeof(const char*) * requestedExtensionCount);
+        VKX_LOCAL_MALLOC(sizeof(const char*) * requestedExtensionCount);
 
     // Iterate requested layers.
     for (uint32_t requestedLayerIndex = 0;
@@ -201,7 +198,7 @@ VkResult vkxCreateInstance(
 }
 
 // Is physical device okay?
-static VkBool32 isPhysicalDeviceOkayDefault(
+static VkBool32 isPhysicalDeviceOkDefault(
                 VkPhysicalDevice physicalDevice, void* pUserData)
 {
     (void)physicalDevice;
@@ -397,24 +394,23 @@ VkPhysicalDevice vkxSelectPhysicalDevice(
 {
     const char* pRequestedName = NULL;
     const VkPhysicalDeviceFeatures* pRequestedFeatures = NULL;
-    VkBool32 (*pIsPhysicalDeviceOkay)(VkPhysicalDevice, void*) = NULL;
+    VkBool32 (*pIsPhysicalDeviceOk)(VkPhysicalDevice, void*) = NULL;
     void* pUserData = NULL;
     if (pSelectInfo) {
         pRequestedName = pSelectInfo->pRequestedName;
         pRequestedFeatures = pSelectInfo->pRequestedFeatures;
-        pIsPhysicalDeviceOkay = pSelectInfo->pIsPhysicalDeviceOkay;
+        pIsPhysicalDeviceOk = pSelectInfo->pIsPhysicalDeviceOk;
         pUserData = pSelectInfo->pUserData;
     }
-    if (pIsPhysicalDeviceOkay == NULL)
-        pIsPhysicalDeviceOkay = isPhysicalDeviceOkayDefault;
+    if (pIsPhysicalDeviceOk == NULL)
+        pIsPhysicalDeviceOk = isPhysicalDeviceOkDefault;
 
     // Allocate physical devices.
     uint32_t physicalDeviceCount = 0;
     VkPhysicalDevice* pPhysicalDevices = NULL;
     vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, NULL);
     pPhysicalDevices = 
-        (VkPhysicalDevice*)VKX_LOCAL_MALLOC(
-                sizeof(VkPhysicalDevice) * physicalDeviceCount);
+        VKX_LOCAL_MALLOC(sizeof(VkPhysicalDevice) * physicalDeviceCount);
     {
         // Retrieve physical devices.
         VkResult result = 
@@ -434,7 +430,6 @@ VkPhysicalDevice vkxSelectPhysicalDevice(
 
     // User supplied requested name?
     if (pRequestedName) {
-
         // Iterate.
         VkPhysicalDeviceProperties properties;
         for (uint32_t index = 0;
@@ -442,22 +437,20 @@ VkPhysicalDevice vkxSelectPhysicalDevice(
             VkPhysicalDevice thisPhysicalDevice = pPhysicalDevices[index];
             vkGetPhysicalDeviceProperties(thisPhysicalDevice, &properties);
             if (strcmp(properties.deviceName, pRequestedName) == 0) {
-
-                // Okay?
-                if (pIsPhysicalDeviceOkay(thisPhysicalDevice, pUserData)) {
+                // Ok?
+                if (pIsPhysicalDeviceOk(thisPhysicalDevice, pUserData)) {
                     bestPhysicalDevice = thisPhysicalDevice;
                 }
             }
         }
     }
     else {
-
         // Iterate.
         for (uint32_t index = 0;
                       index < physicalDeviceCount; index++) {
             // Update best device if better device is found.
             VkPhysicalDevice thisPhysicalDevice = pPhysicalDevices[index];
-            if (pIsPhysicalDeviceOkay(thisPhysicalDevice, pUserData) &&
+            if (pIsPhysicalDeviceOk(thisPhysicalDevice, pUserData) &&
                 isPhysicalDeviceLess(bestPhysicalDevice, thisPhysicalDevice, 
                     pRequestedFeatures)) {
                 bestPhysicalDevice = thisPhysicalDevice;
@@ -487,7 +480,6 @@ VkFormat vkxSelectFormat(
         VkFormat format = pCandidateFormats[index];
         vkGetPhysicalDeviceFormatProperties(
                 physicalDevice, format, &formatProperties);
-
         // Features.
         VkFormatFeatureFlags features = 0;
         switch (requestedTiling) {
@@ -500,7 +492,6 @@ VkFormat vkxSelectFormat(
             default:
                 break;
         }
-
         // Features suitable?
         if ((requestedFeatures & features) ==
              requestedFeatures) {
@@ -549,7 +540,6 @@ uint32_t vkxGetFormatTexelSize(VkFormat format)
         (format == VK_FORMAT_S8_UINT)) {
         return 1;
     }
-
     // 16-bit format?
     if ((format >= VK_FORMAT_R4G4B4A4_UNORM_PACK16 &&
          format <= VK_FORMAT_A1R5G5B5_UNORM_PACK16) ||
@@ -562,14 +552,12 @@ uint32_t vkxGetFormatTexelSize(VkFormat format)
         (format == VK_FORMAT_D16_UNORM)) {
         return 2;
     }
-
     // 24-bit format?
     if ((format >= VK_FORMAT_R8G8B8_UNORM &&
          format <= VK_FORMAT_B8G8R8_SRGB) ||
         (format == VK_FORMAT_D16_UNORM_S8_UINT)) {
         return 3;
     }
-
     // 32-bit format?
     if ((format >= VK_FORMAT_R8G8B8A8_UNORM &&
          format <= VK_FORMAT_A2B10G10R10_SINT_PACK32) ||
@@ -588,18 +576,15 @@ uint32_t vkxGetFormatTexelSize(VkFormat format)
         (format == VK_FORMAT_D24_UNORM_S8_UINT)) {
         return 4;
     }
-
     // 40-bit format?
     if (format == VK_FORMAT_D32_SFLOAT_S8_UINT) {
         return 5;
     }
-
     // 48-bit format?
     if (format >= VK_FORMAT_R16G16B16_UNORM &&
         format <= VK_FORMAT_R16G16B16_SFLOAT) {
         return 6;
     }
-
     // 64-bit format?
     if ((format >= VK_FORMAT_R16G16B16A16_UNORM &&
          format <= VK_FORMAT_R16G16B16A16_SFLOAT) ||
@@ -617,13 +602,11 @@ uint32_t vkxGetFormatTexelSize(VkFormat format)
         (format == VK_FORMAT_B16G16R16G16_422_UNORM)) {
         return 8;
     }
-
     // 96-bit format?
     if (format >= VK_FORMAT_R32G32B32_UINT &&
         format <= VK_FORMAT_R32G32B32_SFLOAT) {
         return 12;
     }
-
     // 128-bit format?
     if ((format >= VK_FORMAT_R32G32B32A32_UINT &&
          format <= VK_FORMAT_R32G32B32A32_SFLOAT) ||
@@ -676,7 +659,6 @@ static uint32_t findFamilyForCreateInfo(
             // Skip for now.
             continue;
         }
-
         // Found an unused queue family that supports create info?
         if (familySupportsCreateInfo(
                     physicalDevice, familyIndex,
@@ -734,15 +716,15 @@ static VkBool32 findFamilyForEachCreateInfo(
     vkGetPhysicalDeviceQueueFamilyProperties(
             physicalDevice, &familyCount, NULL);
     pProperties = 
-            VKX_LOCAL_MALLOC_TYPE(
-            VkQueueFamilyProperties, familyCount);
+            VKX_LOCAL_MALLOC(
+            sizeof(VkQueueFamilyProperties) * familyCount);
     vkGetPhysicalDeviceQueueFamilyProperties(
             physicalDevice, &familyCount, pProperties);
 
     // Create-info pointers used for each queue family.
     const VkxDeviceQueueFamilyCreateInfo** ppCreateInfosUsed = 
-            VKX_LOCAL_MALLOC_TYPE(
-            const VkxDeviceQueueFamilyCreateInfo*, familyCount);
+            VKX_LOCAL_MALLOC(
+            sizeof(const VkxDeviceQueueFamilyCreateInfo*) * familyCount);
     memset(ppCreateInfosUsed, 0, 
             sizeof(VkxDeviceQueueFamilyCreateInfo*) * familyCount);
 
@@ -760,13 +742,10 @@ static VkBool32 findFamilyForEachCreateInfo(
 
         // Not found?
         if (familyIndex == UINT32_MAX) {
-
             // Free properties.
             VKX_LOCAL_FREE(pProperties);
-
             // Free create-info pointers.
             VKX_LOCAL_FREE(ppCreateInfosUsed);
-
             // Failure.
             return VK_FALSE;
         }
@@ -808,41 +787,35 @@ static VkBool32 findFamilyForEachCreateInfo(
 
         // Allocate queues.
         pFamily->pQueues = 
-                (VkQueue*)malloc(sizeof(VkQueue) * pFamily->queueCount);
+                malloc(pFamily->queueCount * sizeof(VkQueue));
 
         // Allocate queue priorities.
         pFamily->pQueuePriorities = 
-                (float*)malloc(sizeof(float) * pFamily->queueCount);
+                malloc(pFamily->queueCount * sizeof(float));
 
         // Use equal priority?
         if (pFamilyCreateInfo->useEqualPriority == VK_TRUE) {
             // Initialize all equal priorities.
             for (uint32_t queueIndex = 0; queueIndex < pFamily->queueCount;
-                          queueIndex++) {
+                          queueIndex++)
                 pFamily->pQueuePriorities[queueIndex] = 1.0f;
-            }
         }
         else {
             // Initialize decreasing priorities from 1 down to 1 / queueCount.
             for (uint32_t queueIndex = 0; queueIndex < pFamily->queueCount;
-                          queueIndex++) {
+                          queueIndex++)
                 pFamily->pQueuePriorities[queueIndex] = 
                     (float)(pFamily->queueCount - queueIndex) /
                     (float)(pFamily->queueCount);
-            }
         }
 
         // Allocate command pool handles.
         pFamily->commandPoolCount = pFamilyCreateInfo->commandPoolCount;
-        pFamily->pCommandPools = 
-            (VkCommandPool*)malloc(
-                sizeof(VkCommandPool) * pFamily->commandPoolCount);
-        memset(pFamily->pCommandPools, 0,
-                sizeof(VkCommandPool) * pFamily->commandPoolCount);
+        pFamily->pCommandPools = calloc(pFamily->commandPoolCount,
+                sizeof(VkCommandPool));
 
         // Allocate and copy command pool create flags.
-        pFamily->pCommandPoolCreateFlags = 
-            (VkCommandPoolCreateFlags*)malloc(
+        pFamily->pCommandPoolCreateFlags = malloc(
                 sizeof(VkCommandPoolCreateFlags) * pFamily->commandPoolCount);
         memcpy(pFamily->pCommandPoolCreateFlags, 
                pFamilyCreateInfo->pCommandPoolCreateFlags,
@@ -876,17 +849,14 @@ VkResult vkxCreateDevice(
     }
     pDevice->physicalDevice = physicalDevice;
     pDevice->pPhysicalDeviceFeatures = 
-        (VkPhysicalDeviceFeatures*)malloc(sizeof(VkPhysicalDeviceFeatures));
+        malloc(sizeof(VkPhysicalDeviceFeatures));
     vkGetPhysicalDeviceFeatures(
             physicalDevice, pDevice->pPhysicalDeviceFeatures);
 
     // Allocate queue families.
     pDevice->queueFamilyCount = pCreateInfo->queueFamilyCreateInfoCount;
     pDevice->pQueueFamilies = 
-        (VkxDeviceQueueFamily*)malloc(
-                sizeof(VkxDeviceQueueFamily) * pDevice->queueFamilyCount);
-    memset(pDevice->pQueueFamilies, 0,
-                sizeof(VkxDeviceQueueFamily) * pDevice->queueFamilyCount);
+        calloc(pDevice->queueFamilyCount, sizeof(VkxDeviceQueueFamily));
 
     // Find queue families.
     if (!findFamilyForEachCreateInfo(
@@ -901,8 +871,8 @@ VkResult vkxCreateDevice(
     // Initialize device create info.
     uint32_t queueCreateInfoCount = pDevice->queueFamilyCount;
     VkDeviceQueueCreateInfo* pQueueCreateInfos =
-            VKX_LOCAL_MALLOC_TYPE(
-            VkDeviceQueueCreateInfo, pDevice->queueFamilyCount);
+            VKX_LOCAL_MALLOC(
+            sizeof(VkDeviceQueueCreateInfo) * pDevice->queueFamilyCount);
     VkDeviceCreateInfo deviceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = NULL,
@@ -959,12 +929,11 @@ VkResult vkxCreateDevice(
 
         // Get queues.
         for (uint32_t queueIndex = 0; queueIndex < pQueueFamily->queueCount;
-                      queueIndex++) {
+                      queueIndex++)
             vkGetDeviceQueue(
                     pDevice->device, 
                     pQueueFamily->queueFamilyIndex, queueIndex,
                     pQueueFamily->pQueues + queueIndex);
-        }
 
         // Create command pools.
         for (uint32_t poolIndex = 0; 
@@ -999,41 +968,31 @@ void vkxDestroyDevice(
     if (pDevice) {
         // Free physical device features.
         free(pDevice->pPhysicalDeviceFeatures);
-
         for (uint32_t familyIndex = 0; familyIndex < pDevice->queueFamilyCount;
                       familyIndex++) {
             VkxDeviceQueueFamily* pQueueFamily = 
                         &pDevice->pQueueFamilies[familyIndex];
-
             // Free queues.
             free(pQueueFamily->pQueues);
-
             // Free queue priorities.
             free(pQueueFamily->pQueuePriorities);
-
             // Destroy command pools.
             for (uint32_t poolIndex = 0;
                           poolIndex < pQueueFamily->commandPoolCount;
-                          poolIndex++) {
+                          poolIndex++)
                 vkDestroyCommandPool(
                         pDevice->device, 
                         pQueueFamily->pCommandPools[poolIndex],
                         pAllocator);
-            }
-
             // Free command pools.
             free(pQueueFamily->pCommandPools);
-
             // Free command pool create flags.
             free(pQueueFamily->pCommandPoolCreateFlags);
         }
-
         // Free queue families.
         free(pDevice->pQueueFamilies);
-
         // Destroy device.
         vkDestroyDevice(pDevice->device, pAllocator);
-
         // Nullify.
         memset(pDevice, 0, sizeof(VkxDevice));
     }
