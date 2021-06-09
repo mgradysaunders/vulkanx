@@ -38,10 +38,12 @@ set_target_properties(
     C_STANDARD 11
     C_STANDARD_REQUIRED True
     )
+find_package(Vulkan REQUIRED)
 
 # Include directories.
 target_include_directories(
     vulkanx
     PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${Vulkan_INCLUDE_DIRS}"
     )
