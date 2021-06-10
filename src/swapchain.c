@@ -81,7 +81,7 @@ static VkResult selectSwapchainPresentMode(
         for (uint32_t presentModeIndex = 0;
                       presentModeIndex < presentModeCount;
                       presentModeIndex++) {
-            if (pPresentModes[presentModeIndex] == VK_PRESENT_MODE_FIFO_KHR) {
+            if (pPresentModes[presentModeIndex] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
                 bestPresentMode = pPresentModes[presentModeIndex];
                 found = VK_TRUE;
                 break;
@@ -563,7 +563,7 @@ VkResult vkxRecreateSwapchain(
     for (uint32_t paramIndex = 0; paramIndex < 4; 
                   paramIndex++) {
         VkResult result =
-            vkxCreateDefaultSemaphores(
+            vkxCreateSemaphores(
                     device, semaphoreCounts[paramIndex], pAllocator, 
                     pSemaphores[paramIndex]);
         if (VKX_IS_ERROR(result)) {
@@ -573,17 +573,10 @@ VkResult vkxRecreateSwapchain(
     }
 
     // Create fences.
-    for (uint32_t imageIndex = 0; imageIndex < imageCount;
-                  imageIndex++) {
-        VkFenceCreateInfo fenceCreateInfo = {
-            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-            .flags = VK_FENCE_CREATE_SIGNALED_BIT // Default signaled
-        };
-        VkResult result = 
-            vkCreateFence(
-                    device, 
-                    &fenceCreateInfo, pAllocator,
-                    &pSwapchain->pFences[imageIndex]);
+    {
+        VkResult result = vkxCreateFences(
+                device, imageCount, VK_TRUE, pAllocator,
+                pSwapchain->pFences);
         if (VKX_IS_ERROR(result)) {
             vkxDestroySwapchain(pSwapchain, pAllocator);
             return result;
@@ -616,7 +609,7 @@ VkResult vkxRecreateSwapchain(
                 .pNext = NULL,
                 .flags = 0,
                 .renderPass = pSwapchain->renderPass,
-                .attachmentCount = 1,
+                .attachmentCount = 1, // TODO
                 .pAttachments = &pSwapchain->pImageViews[imageIndex],
                 .width = pSwapchain->imageExtent.width,
                 .height = pSwapchain->imageExtent.height,
@@ -650,48 +643,55 @@ void vkxDestroySwapchain(
     if (pSwapchain) {
         VkDevice device = pSwapchain->device;
         for (uint32_t imageIndex = 0; imageIndex < pSwapchain->imageCount; 
-                      imageIndex++) {
-            // Destroy image views.
-            vkDestroyImageView(
-                    device,
-                    pSwapchain->pImageViews[imageIndex], pAllocator);
-            // Destroy acquired semaphores.
-            vkDestroySemaphore(
-                    device,
-                    pSwapchain->pAcquiredSemaphores[imageIndex], pAllocator);
-            // Destroy released semaphores.
-            vkDestroySemaphore(
-                    device,
-                    pSwapchain->pReleasedSemaphores[imageIndex], pAllocator);
-            // Destroy fences.
-            vkDestroyFence(
-                    device,
-                    pSwapchain->pFences[imageIndex], pAllocator);
-            // Destroy framebuffer.
+                      imageIndex++)
+            // Destroy framebuffers.
             vkDestroyFramebuffer(
                     device,
                     pSwapchain->pFramebuffers[imageIndex], pAllocator);
-        }
+        // Destroy image views.
+        vkxDestroyImageViews(
+                pSwapchain->device,
+                pSwapchain->imageCount,
+                pSwapchain->pImageViews, pAllocator);
+        // Destroy fences.
+        vkxDestroyFences(
+                pSwapchain->device,
+                pSwapchain->imageCount,
+                pSwapchain->pFences, pAllocator);
+        // Destroy acquired semaphores.
+        vkxDestroySemaphores(
+                pSwapchain->device, 
+                pSwapchain->imageCount, 
+                pSwapchain->pAcquiredSemaphores, pAllocator);
+        // Destroy released semaphores.
+        vkxDestroySemaphores(
+                pSwapchain->device, 
+                pSwapchain->imageCount, 
+                pSwapchain->pReleasedSemaphores, pAllocator);
         // Destroy next acquired semaphore.
         vkDestroySemaphore(
-                device, pSwapchain->nextAcquiredSemaphore, pAllocator);
+                pSwapchain->device,
+                pSwapchain->nextAcquiredSemaphore, pAllocator);
         // Destroy next released semaphore.
         vkDestroySemaphore(
-                device, pSwapchain->nextReleasedSemaphore, pAllocator);
+                pSwapchain->device,
+                pSwapchain->nextReleasedSemaphore, pAllocator);
         // Free command buffers.
         vkFreeCommandBuffers(
-                device,
+                pSwapchain->device,
                 pSwapchain->commandPool, pSwapchain->imageCount,
                 pSwapchain->pCommandBuffers);
         // Destroy command pool.
         vkDestroyCommandPool(
-                device, pSwapchain->commandPool, pAllocator);
+                pSwapchain->device,
+                pSwapchain->commandPool, pAllocator);
         // Destroy render pass.
         vkDestroyRenderPass(
-                device, pSwapchain->renderPass, pAllocator);
+                pSwapchain->device, 
+                pSwapchain->renderPass, pAllocator);
         // Destroy swapchain.
         vkDestroySwapchainKHR(
-                device,
+                pSwapchain->device,
                 pSwapchain->swapchain, pAllocator);
         // Free framebuffers.
         free(pSwapchain->pFramebuffers);
@@ -714,6 +714,74 @@ void vkxDestroySwapchain(
     }
 }
 
+#if 0
+void createSwapchainAttachments(
+            VkxSwapchain* pSwapchain,
+            uint32_t colorAttachmentCount,
+            const VkxSwapchainColorAttachmentDescription* pColorAttachments,
+            const VkAllocationCallbacks* pAllocator,
+            VkxSwapchainAttachments* pAttachments)
+{
+    assert(pAttachments);
+    memset(pAttachments, 0, sizeof(VkxSwapchainAttachments));
+    VkImageCreateInfo* pImageCreateInfos = 
+            malloc(sizeof(VkImageCreateInfo) * colorAttachmentCount);
+    VkMemoryPropertyFlags* pMemoryPropertyFlags = 
+            malloc(sizeof(VkMemoryPropertyFlags) * colorAttachmentCount);
+    for (uint32_t attIndex = 0; attIndex < colorAttachmentCount;
+                  attIndex++) {
+        const VkxSwapchainColorAttachmentDescription* 
+                pColorAttachment = 
+                pColorAttachments + attIndex;
+        VkImageCreateInfo imageCreateInfo = {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+            .pNext = NULL,
+            .flags = 0,
+            .imageType = VK_IMAGE_TYPE_2D,
+            .format = pColorAttachment->format,
+            .extent = {
+                .width = pSwapchain->imageExtent.width,
+                .height = pSwapchain->imageExtent.height,
+                .depth = 1
+            },
+            .mipLevels = pColorAttachment->mipLevels,
+            .arrayLayers = pColorAttachment->arrayLayers,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .tiling = VK_IMAGE_TILING_OPTIMAL,
+            .usage = pColorAttachment->usage,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = NULL,
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED
+        };
+        if (pColorAttachment->pExtentOverride) {
+            VkExtent2D extent = 
+                pColorAttachment->pExtentOverride(pSwapchain->imageExtent, 
+                pColorAttachment->pExtentOverrideUserData);
+            imageCreateInfo.extent.width = extent.width;
+            imageCreateInfo.extent.height = extent.height;
+        }
+        pImageCreateInfos[attIndex] = imageCreateInfo;
+        pMemoryPropertyFlags[attIndex] = 
+                VK_MEMORY_PROPERTY_FLAGS_DEVICE_LOCAL_BIT;
+    }
+    VkResult result = vkxCreateImageGroup(
+            pSwapchain->physicalDevice,
+            pSwapchain->device,
+            colorAttachmentCount,
+            pImageCreateInfos,
+            pMemoryPropertyFlags,
+            pAllocator,
+            &pAttachments->images);
+    vkxCreateDefaultImageViews(
+            pSwapchain->device,
+            colorAttachmentCount,
+            pAttachments->images.pImages,
+            pImageCreateInfos, pAllocator,
+            pAttachments->pImageViews);
+}
+#endif
+
 VkResult vkxSwapchainSetupRenderPass(
             VkxSwapchain* pSwapchain,
             const VkRenderPassCreateInfo* pCreateInfo,
@@ -722,9 +790,8 @@ VkResult vkxSwapchainSetupRenderPass(
     VkResult result = vkCreateRenderPass(
                 pSwapchain->device, 
                 pCreateInfo, pAllocator, &pSwapchain->renderPass);
-    if (result != VK_SUCCESS) {
+    if (result != VK_SUCCESS)
         return result;
-    }
 
     // Create framebuffers.
     for (uint32_t imageIndex = 0; imageIndex < pSwapchain->imageCount;
@@ -734,7 +801,7 @@ VkResult vkxSwapchainSetupRenderPass(
             .pNext = NULL,
             .flags = 0,
             .renderPass = pSwapchain->renderPass,
-            .attachmentCount = 1,
+            .attachmentCount = 1, // TODO 
             .pAttachments = &pSwapchain->pImageViews[imageIndex],
             .width = pSwapchain->imageExtent.width,
             .height = pSwapchain->imageExtent.height,

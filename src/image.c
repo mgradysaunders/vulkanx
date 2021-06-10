@@ -34,7 +34,6 @@
 #include <vulkanx/buffer.h>
 #include <vulkanx/image.h>
 
-// Create image.
 VkResult vkxCreateImage(
             VkPhysicalDevice physicalDevice,
             VkDevice device,
@@ -120,7 +119,6 @@ VkResult vkxCreateImage(
     return result;
 }
 
-// Destroy image.
 void vkxDestroyImage(
             VkDevice device, 
             VkxImage* pImage,
@@ -145,7 +143,6 @@ void vkxDestroyImage(
     }
 }
 
-// Create image group.
 VkResult vkxCreateImageGroup(
             VkPhysicalDevice physicalDevice,
             VkDevice device,
@@ -253,7 +250,6 @@ VkResult vkxCreateImageGroup(
     return VK_SUCCESS;
 }
 
-// Destroy image group.
 void vkxDestroyImageGroup(
             VkDevice device,
             VkxImageGroup* pImageGroup,
@@ -281,7 +277,6 @@ void vkxDestroyImageGroup(
     }
 }
 
-// Create default image view.
 VkResult vkxCreateDefaultImageView(
             VkDevice device,
             VkImage image,
@@ -369,7 +364,6 @@ VkResult vkxCreateDefaultImageView(
                 pImageView);
 }
 
-// Create default image views.
 VkResult vkxCreateDefaultImageViews(
             VkDevice device,
             uint32_t imageCount,
@@ -378,22 +372,16 @@ VkResult vkxCreateDefaultImageViews(
             const VkAllocationCallbacks* pAllocator,
             VkImageView* pImageViews)
 {
-    if (imageCount == 0) {
+    if (imageCount == 0)
         return VK_SUCCESS;
-    }
 
-    assert(pImages && pImageCreateInfos);
-
-    for (uint32_t imageIndex = 0;
-                  imageIndex < imageCount;
-                  imageIndex++) {
-        // Nullify.
-        pImageViews[imageIndex] = VK_NULL_HANDLE;
-    }
+    assert(pImages);
+    assert(pImageCreateInfos);
+    assert(pImageViews);
+    memset(pImageViews, 0, sizeof(VkImageView) * imageCount);
 
     VkResult result = VK_SUCCESS;
-    for (uint32_t imageIndex = 0;
-                  imageIndex < imageCount;
+    for (uint32_t imageIndex = 0; imageIndex < imageCount;
                   imageIndex++) {
         // Create default image view.
         result = 
@@ -404,24 +392,32 @@ VkResult vkxCreateDefaultImageViews(
                     &pImageViews[imageIndex]);
         if (VKX_IS_ERROR(result)) {
             pImageViews[imageIndex] = VK_NULL_HANDLE;
+            vkxDestroyImageViews(
+                    device, imageCount, pImageViews, pAllocator);
             break;
         }
     }
 
-    if (VKX_IS_ERROR(result)) {
-        for (uint32_t imageIndex = 0;
-                      imageIndex < imageCount;
-                      imageIndex++) {
-            // Destroy.
+    return result;
+}
+
+void vkxDestroyImageViews(
+            VkDevice device,
+            uint32_t imageViewCount,
+            VkImageView* pImageViews,
+            const VkAllocationCallbacks* pAllocator)
+{
+    if (pImageViews) {
+        // Destroy.
+        for (uint32_t imageViewIndex = 0; imageViewIndex < imageViewCount;
+                      imageViewIndex++)
             vkDestroyImageView(
                     device,
-                    pImageViews[imageIndex],
+                    pImageViews[imageViewIndex],
                     pAllocator);
-            // Nullify.
-            pImageViews[imageIndex] = VK_NULL_HANDLE;
-        }
+        // Nullify.
+        memset(pImageViews, 0, sizeof(VkImageView) * imageViewCount);
     }
-    return result;
 }
 
 // Transition image layout.
@@ -438,8 +434,8 @@ VkResult vkxCmdTransitionImageLayout(
     VkImageMemoryBarrier memoryBarrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = NULL,
-        .srcAccessMask = 0, // Uninitialized.
-        .dstAccessMask = 0, // Uninitialized.
+        .srcAccessMask = 0, // Uninitialized
+        .dstAccessMask = 0, // Uninitialized
         .oldLayout = oldLayout,
         .newLayout = newLayout,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,

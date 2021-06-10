@@ -321,3 +321,28 @@ void vkxDestroySDLWindow(VkxSDLWindow* pWindow)
         memset(pWindow, 0, sizeof(VkxSDLWindow));
     }
 }
+
+void vkxSDLWindowResizeSwapchainOrExit(VkxSDLWindow* pWindow)
+{
+    assert(pWindow);
+    vkDeviceWaitIdle(pWindow->device.device);
+    int drawableWidth = 0;
+    int drawableHeight = 0;
+    SDL_Vulkan_GetDrawableSize(
+            pWindow->window, 
+            &drawableWidth, 
+            &drawableHeight);
+    VkExtent2D surfaceExtent = {
+        .width = (uint32_t)drawableWidth,
+        .height = (uint32_t)drawableHeight
+    };
+    VkResult result = vkxRecreateSwapchain(
+            pWindow->swapchainSurface, surfaceExtent, NULL, 
+            &pWindow->swapchain);
+    if (result != VK_SUCCESS) {
+        fprintf(stderr, 
+                "failed to recreate swapchain (%s)\n", 
+                vkxResultName(result));
+        exit(EXIT_FAILURE);   
+    }
+}

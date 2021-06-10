@@ -48,14 +48,10 @@ extern "C" {
  */
 typedef struct VkxImage_
 {
-    /**
-     * @brief Image.
-     */
+    /** @brief Image. */
     VkImage image;
 
-    /**
-     * @brief Memory.
-     */
+    /** @brief Memory. */
     VkDeviceMemory memory;
 }
 VkxImage;
@@ -133,19 +129,13 @@ void vkxDestroyImage(
  */
 typedef struct VkxImageGroup_
 {
-    /**
-     * @brief Image count.
-     */
+    /** @brief Image count. */
     uint32_t imageCount;
 
-    /**
-     * @brief Images.
-     */
+    /** @brief Images. */
     VkImage* pImages;
 
-    /**
-     * @brief Shared memory.
-     */
+    /** @brief Shared memory. */
     VkxSharedDeviceMemory sharedMemory;
 }
 VkxImageGroup;
@@ -229,7 +219,6 @@ void vkxDestroyImageGroup(
             VkxImageGroup* pImageGroup,
             const VkAllocationCallbacks* pAllocator);
 
-
 /**
  * @brief Create default image view.
  *
@@ -283,6 +272,27 @@ VkResult vkxCreateDefaultImageViews(
             const VkImageCreateInfo* pImageCreateInfos,
             const VkAllocationCallbacks* pAllocator,
             VkImageView* pImageViews);
+
+/**
+ * @brief Destroy image views.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] imageViewCount
+ * Image view count.
+ *
+ * @param[inout] pImageViews
+ * Image views.
+ *
+ * @param[in] pAllocator.
+ * _Optional_. Allocation callbacks.
+ */
+void vkxDestroyImageViews(
+            VkDevice device,
+            uint32_t imageViewCount,
+            VkImageView* pImageViews,
+            const VkAllocationCallbacks* pAllocator);
 
 /**
  * @brief Transition image layout command.

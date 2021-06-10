@@ -27,90 +27,81 @@
  */
 /*-*-*-*-*-*-*/
 #include <assert.h>
+#include <string.h>
 #include <vulkanx/result.h>
 #include <vulkanx/command_buffer.h>
 
-// Create default fences.
-VkResult vkxCreateDefaultFences(
+VkResult vkxCreateFences(
                 VkDevice device,
                 uint32_t fenceCount,
+                VkBool32 fenceSignaled,
                 const VkAllocationCallbacks* pAllocator,
                 VkFence* pFences)
 {
-    if (fenceCount == 0) {
+    if (fenceCount == 0)
         return VK_SUCCESS;
-    }
 
     assert(pFences);
+    memset(pFences, 0, sizeof(VkFence) * fenceCount);
 
-    for (uint32_t fenceIndex = 0;
-                  fenceIndex < fenceCount;
-                  fenceIndex++) {
-        // Nullify.
-        pFences[fenceIndex] = VK_NULL_HANDLE;
-    }
-
-    // Default fence create info.
+    // Fence create info.
     VkFenceCreateInfo fenceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = NULL,
-        .flags = 0
+        .flags = fenceSignaled 
+               ? VK_FENCE_CREATE_SIGNALED_BIT : 0
     };
 
     VkResult result = VK_SUCCESS;
-    for (uint32_t fenceIndex = 0;
-                  fenceIndex < fenceCount;
+    for (uint32_t fenceIndex = 0; fenceIndex < fenceCount;
                   fenceIndex++) {
         // Create fence.
-        result = 
-            vkCreateFence(
+        result = vkCreateFence(
                     device, 
                     &fenceCreateInfo, pAllocator, 
                     &pFences[fenceIndex]);
         if (VKX_IS_ERROR(result)) {
             pFences[fenceIndex] = VK_NULL_HANDLE;
+            vkxDestroyFences(device, fenceCount, pFences, pAllocator);
             break;
         }
     }
 
-    // Error?
-    if (VKX_IS_ERROR(result)) {
-        for (uint32_t fenceIndex = 0;
-                      fenceIndex < fenceCount;
-                      fenceIndex++) {
-            // Destroy.
-            vkDestroyFence(
-                    device,
-                    pFences[fenceIndex],
-                    pAllocator);
-            // Nullify.
-            pFences[fenceIndex] = VK_NULL_HANDLE;
-        }
-    }
     return result;
 }
 
-// Create default semaphores.
-VkResult vkxCreateDefaultSemaphores(
+void vkxDestroyFences(
+                VkDevice device,
+                uint32_t fenceCount,
+                VkFence* pFences,
+                const VkAllocationCallbacks* pAllocator)
+{
+    if (pFences) {
+        // Destroy.
+        for (uint32_t fenceIndex = 0; fenceIndex < fenceCount; 
+                      fenceIndex++)
+            vkDestroyFence(
+                    device, 
+                    pFences[fenceIndex], 
+                    pAllocator);
+        // Nullify.
+        memset(pFences, 0, sizeof(VkFence) * fenceCount);
+    }
+}
+
+VkResult vkxCreateSemaphores(
                 VkDevice device,
                 uint32_t semaphoreCount,
                 const VkAllocationCallbacks* pAllocator,
                 VkSemaphore* pSemaphores)
 {
-    if (semaphoreCount == 0) {
+    if (semaphoreCount == 0)
         return VK_SUCCESS;
-    }
 
     assert(pSemaphores);
+    memset(pSemaphores, 0, sizeof(VkSemaphore) * semaphoreCount);
 
-    for (uint32_t semaphoreIndex = 0;
-                  semaphoreIndex < semaphoreCount;
-                  semaphoreIndex++) {
-        // Nullify.
-        pSemaphores[semaphoreIndex] = VK_NULL_HANDLE;
-    }
-
-    // Default semaphore create info.
+    // Semaphore create info.
     VkSemaphoreCreateInfo semaphoreCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         .pNext = NULL,
@@ -118,39 +109,42 @@ VkResult vkxCreateDefaultSemaphores(
     };
 
     VkResult result = VK_SUCCESS;
-    for (uint32_t semaphoreIndex = 0;
-                  semaphoreIndex < semaphoreCount;
+    for (uint32_t semaphoreIndex = 0; semaphoreIndex < semaphoreCount;
                   semaphoreIndex++) {
-        // Create fence.
-        result = 
-            vkCreateSemaphore(
+        // Create semaphore.
+        result = vkCreateSemaphore(
                     device, 
                     &semaphoreCreateInfo, pAllocator, 
                     &pSemaphores[semaphoreIndex]);
         if (VKX_IS_ERROR(result)) {
             pSemaphores[semaphoreIndex] = VK_NULL_HANDLE;
+            vkxDestroySemaphores(
+                    device, semaphoreCount, pSemaphores, pAllocator);
             break;
-        }
-    }
-
-    // Error?
-    if (VKX_IS_ERROR(result)) {
-        for (uint32_t semaphoreIndex = 0;
-                      semaphoreIndex < semaphoreCount;
-                      semaphoreIndex++) {
-            // Destroy.
-            vkDestroySemaphore(
-                    device, 
-                    pSemaphores[semaphoreIndex], 
-                    pAllocator);
-            // Nullify.
-            pSemaphores[semaphoreIndex] = VK_NULL_HANDLE;
         }
     }
     return result;
 }
 
-// Allocate and begin command buffers.
+void vkxDestroySemaphores(
+                VkDevice device, 
+                uint32_t semaphoreCount, 
+                VkSemaphore* pSemaphores,
+                const VkAllocationCallbacks* pAllocator)
+{
+    if (pSemaphores) {
+        // Destroy.
+        for (uint32_t semaphoreIndex = 0; semaphoreIndex < semaphoreCount;
+                      semaphoreIndex++)
+            vkDestroySemaphore(
+                    device, 
+                    pSemaphores[semaphoreIndex], 
+                    pAllocator);
+        // Nullify.
+        memset(pSemaphores, 0, sizeof(VkSemaphore) * semaphoreCount);
+    }
+}
+
 VkResult vkxAllocateAndBeginCommandBuffers(
             VkDevice device,
             const VkCommandBufferAllocateInfo* pAllocateInfo,
@@ -213,7 +207,6 @@ FAILURE:
     return result;
 }
 
-// Flush command buffers.
 VkResult vkxFlushCommandBuffers(
             VkDevice device,
             VkQueue queue,
@@ -262,13 +255,7 @@ VkResult vkxFlushCommandBuffers(
     }
 
     // Wait.
-    VkResult result = 
-        vkWaitForFences(
-                device,
-                1, 
-                &fence,
-                VK_TRUE,
-                UINT64_MAX);
+    VkResult result = vkWaitForFences(device, 1,  &fence, VK_TRUE, UINT64_MAX);
 
     // Destroy fence.
     vkDestroyFence(device, fence, pAllocator);
@@ -276,7 +263,6 @@ VkResult vkxFlushCommandBuffers(
     return result;
 }
 
-// End, flush, and free command buffers.
 VkResult vkxEndFlushAndFreeCommandBuffers(
             VkDevice device,
             VkQueue queue,
@@ -285,18 +271,16 @@ VkResult vkxEndFlushAndFreeCommandBuffers(
             const VkCommandBuffer* pCommandBuffers,
             const VkAllocationCallbacks* pAllocator)
 {
-    if (commandBufferCount == 0) {
+    if (commandBufferCount == 0)
         return VK_SUCCESS;
-    }
 
     assert(pCommandBuffers);
 
+    // End.
     for (uint32_t commandBufferIndex = 0;
                   commandBufferIndex < commandBufferCount;
-                  commandBufferIndex++) {
-        // End.
+                  commandBufferIndex++)
         vkEndCommandBuffer(pCommandBuffers[commandBufferIndex]);
-    }
 
     // Flush.
     VkResult result =
@@ -317,4 +301,16 @@ VkResult vkxEndFlushAndFreeCommandBuffers(
     return result;
 }
 
-
+void vkxBeginCommandBuffer(
+            VkCommandBuffer commandBuffer,
+            VkCommandBufferUsageFlags flags,
+            const VkCommandBufferInheritanceInfo* pInheritanceInfo)
+{
+    VkCommandBufferBeginInfo beginInfo = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = flags,
+        .pInheritanceInfo = pInheritanceInfo
+    };
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+}

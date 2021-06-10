@@ -31,6 +31,7 @@
 #define VULKANX_SWAPCHAIN_H
 
 #include <vulkan/vulkan.h>
+#include <vulkanx/image.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,38 @@ extern "C" {
  * `<vulkanx/swapchain.h>`
  */
 /**@{*/
+
+#if 0
+/**
+ * @brief Swapchain color attachment description.
+ */
+typedef struct VkxSwapchainColorAttachmentDescription_
+{
+    /** @brief Format. */
+    VkFormat format;
+
+    /** @brief Usage. */
+    VkImageUsageFlags usage;
+
+    /** @brief _Optional_. Extent override, given swapchain extent. */
+    VkExtent2D (*pExtentOverride)(VkExtent2D, void*);
+
+    /** @brief _Optional_. Extent override user data. */
+    void* pExtentOverrideUserData;
+
+    /** @brief Array layers. */
+    uint32_t arrayLayers;
+}
+VkxSwapchainColorAttachmentDescription;
+
+typedef struct VkxSwapchainAttachments_
+{
+    VkxImageGroup images;
+
+    VkImageView* pImageViews;
+}
+VkxSwapchainAttachments;
+#endif
 
 /**
  * @brief Swapchain.
@@ -89,7 +122,6 @@ typedef struct VkxSwapchain_
     /** @brief Present queue. */
     VkQueue presentQueue;
 
-
     /**@}*/
 
     /**
@@ -112,13 +144,13 @@ typedef struct VkxSwapchain_
     /** @brief Image views. */
     VkImageView* pImageViews;
 
-    /** @brief Image indices. */
+    /** @brief Indices for each image. */
     uint32_t* pIndices;
 
-    /** @brief Acquired semaphores. */
+    /** @brief Acquired semaphores for each image. */
     VkSemaphore* pAcquiredSemaphores;
 
-    /** @brief Released semaphores. */
+    /** @brief Released semaphores for each image. */
     VkSemaphore* pReleasedSemaphores;
 
     /** @brief Next acquired semaphore. */
@@ -127,13 +159,13 @@ typedef struct VkxSwapchain_
     /** @brief Next released semaphore. */
     VkSemaphore nextReleasedSemaphore;
 
-    /** @brief Fences. */
+    /** @brief Fences for each image. */
     VkFence* pFences;
 
     /** @brief Command pool. */
     VkCommandPool commandPool;
 
-    /** @brief Command buffers. */
+    /** @brief Command buffers for each image. */
     VkCommandBuffer* pCommandBuffers;
 
     /**@}*/
@@ -146,7 +178,7 @@ typedef struct VkxSwapchain_
     /** @brief Render pass. */
     VkRenderPass renderPass;
 
-    /** @brief Framebuffers. */
+    /** @brief Framebuffers for each image. */
     VkFramebuffer* pFramebuffers;
 
     /**@}*/
@@ -286,6 +318,17 @@ VkResult vkxSwapchainSetupRenderPass(
             const VkRenderPassCreateInfo* pCreateInfo,
             const VkAllocationCallbacks* pAllocator);
 
+#if 0
+/**
+ * @brief Get render pass begin info.
+ */
+void vkxSwapchainGetRenderPassBeginInfo(
+            const VkxSwapchain* pSwapchain,
+            uint32_t clearValueCount,
+            const VkClearValue* pClearValues,
+            VkRenderPassBeginInfo* pBeginInfo);
+#endif
+
 /**
  * @brief Acquire next image.
  *
@@ -301,6 +344,9 @@ VkResult vkxSwapchainSetupRenderPass(
 VkResult vkxSwapchainAcquireNextImage(
             VkxSwapchain* pSwapchain, uint64_t timeout);
 
+/**
+ * @brief
+ */
 VkResult vkxSwapchainSubmit(
             VkxSwapchain* pSwapchain);
 

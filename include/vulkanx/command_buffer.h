@@ -44,7 +44,7 @@ extern "C" {
 /**@{*/
 
 /**
- * @brief Create default fences.
+ * @brief Create fences.
  *
  * @param[in] device
  * Device.
@@ -52,20 +52,45 @@ extern "C" {
  * @param[in] fenceCount
  * Fence count.
  *
+ * @param[in] fenceSignaled
+ * Fence signaled?
+ *
  * @param[in] pAllocator
  * _Optional_. Allocation callbacks.
  *
  * @param[out] pFences
  * Fences.
  */
-VkResult vkxCreateDefaultFences(
+VkResult vkxCreateFences(
                 VkDevice device,
                 uint32_t fenceCount,
+                VkBool32 fenceSignaled,
                 const VkAllocationCallbacks* pAllocator,
                 VkFence* pFences);
 
 /**
- * @brief Create default semaphores.
+ * @brief Destroy fences.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] fenceCount
+ * Fence count.
+ *
+ * @param[inout] pFences
+ * Fences.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ */
+void vkxDestroyFences(
+            VkDevice device,
+            uint32_t fenceCount,
+            VkFence* pFences,
+            const VkAllocationCallbacks* pAllocator);
+
+/**
+ * @brief Create semaphores.
  *
  * @param[in] device
  * Device.
@@ -79,11 +104,32 @@ VkResult vkxCreateDefaultFences(
  * @param[out] pSemaphores
  * Semaphores.
  */
-VkResult vkxCreateDefaultSemaphores(
+VkResult vkxCreateSemaphores(
                 VkDevice device,
                 uint32_t semaphoreCount,
                 const VkAllocationCallbacks* pAllocator,
                 VkSemaphore* pSemaphores);
+
+/**
+ * @brief Destroy semaphores.
+ *
+ * @param[in] device
+ * Device.
+ *
+ * @param[in] semaphoreCount
+ * Semaphore count.
+ *
+ * @param[inout] pSemaphores
+ * Semaphores.
+ *
+ * @param[in] pAllocator
+ * _Optional_. Allocation callbacks.
+ */
+void vkxDestroySemaphores(
+            VkDevice device,
+            uint32_t semaphoreCount,
+            VkSemaphore* pSemaphores,
+            const VkAllocationCallbacks* pAllocator);
 
 /**
  * @brief Allocate and begin command buffers.
@@ -159,6 +205,27 @@ VkResult vkxEndFlushAndFreeCommandBuffers(
             uint32_t commandBufferCount,
             const VkCommandBuffer* pCommandBuffers,
             const VkAllocationCallbacks* pAllocator);
+
+/**
+ * @brief Begin command buffer.
+ *
+ * @param[in] commandBuffer
+ * Command buffer.
+ *
+ * @param[in] flags
+ * Usage flags.
+ *
+ * @param[in] pInheritanceInfo
+ * _Optional_. Inheritance info.
+ *
+ * @note
+ * This does not do anything fancy, it just bypasses the need to initialize a
+ * temporary `VkCommandBufferBeginInfo` for `vkBeginCommandBuffer`.
+ */
+void vkxBeginCommandBuffer(
+            VkCommandBuffer commandBuffer,
+            VkCommandBufferUsageFlags flags,
+            const VkCommandBufferInheritanceInfo* pInheritanceInfo);
 
 /**@}*/
 
