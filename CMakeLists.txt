@@ -1,5 +1,5 @@
 # CMake version.
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
 # Project.
 project(vulkanx VERSION 1.0.0 LANGUAGES C)
@@ -10,11 +10,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Set compile flags.
-set(CMAKE_CFLAGS_DEBUG "-g")
-set(CMAKE_CFLAGS_RELEASE "-O3 -DNDEBUG ")
+set(CMAKE_CFLAGS_DEBUG "-Wall -Wextra -g")
+set(CMAKE_CFLAGS_RELEASE "-Wall -Wextra -O3 -DNDEBUG ")
 
-# Glob sources.
-# file(GLOB_RECURSE SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.c")
 set(SOURCES
     src/buffer.c
     src/command_buffer.c
@@ -28,22 +26,62 @@ set(SOURCES
     src/swapchain.c
     src/vulkanx_SDL.c)
 
-# Add main library.
+find_package(Vulkan REQUIRED)
+
 add_library(vulkanx STATIC ${SOURCES})
 
-# Set C++17.
+# Set C11.
 set_target_properties(
     vulkanx
     PROPERTIES
     C_STANDARD 11
     C_STANDARD_REQUIRED True
     )
-find_package(Vulkan REQUIRED)
-
-# Include directories.
 target_include_directories(
     vulkanx
     PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     "${Vulkan_INCLUDE_DIRS}"
+    )
+
+install(
+    TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}_Targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${PROJECT_NAME}ConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+    )
+set(INCLUDE_DIR include)
+configure_package_config_file(
+    "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    PATH_VARS INCLUDE_DIR
+    INSTALL_DESTINATION
+    ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+    )
+
+install(
+    EXPORT ${PROJECT_NAME}_Targets
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+    )
+install(
+    FILES
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    DESTINATION
+    "${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake"
+    )
+install(
+    DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
+    DESTINATION include
     )
